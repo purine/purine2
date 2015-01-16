@@ -55,4 +55,12 @@ rng_t* caffe_rng() {
   return &rng_;
 }
 
+int current_device() {
+  return 0;
+}
+
+int current_rank() {
+  return 0;
+}
+
 }

@@ -33,6 +33,8 @@ include_directories(${LIBUV_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
+# set_source_files_properties(graph/graph.hpp PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} -Wno-non-template-friend")
+
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}
   -gencode arch=compute_20,code=sm_20
   -gencode arch=compute_20,code=sm_21
@@ -57,7 +59,8 @@ add_library(purine STATIC ${PURINE_CPP_SOURCES})
 target_link_libraries(purine purine_cu
   ${CUDA_CUBLAS_LIBRARIES}
   ${CUDA_curand_LIBRARY}
+  ${BLAS_LIBRARIES}
   /usr/local/lib/libcudnn.so
   )
-
+CUDA_ADD_CUBLAS_TO_TARGET(purine)
 add_subdirectory(tests)

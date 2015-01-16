@@ -79,6 +79,10 @@ const char* cublasGetErrorString(cublasStatus_t error);
 const char* curandGetErrorString(curandStatus_t error);
 
 class CUDA {
+ private:
+  // disable copy and assignment
+  CUDA(const CUDA&);
+  CUDA& operator=(const CUDA&);
  protected:
   cudaStream_t stream_;
   cublasHandle_t cublas_;
