@@ -4,7 +4,8 @@
 
 namespace purine {
 
-Mul::Mul(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs)
+Mul::Mul(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
+    const param_tuple& args)
     : Operation(inputs, outputs) {
   CHECK_GE(inputs_.size(), 2);
   for (Tensor* input : inputs_) {
@@ -35,7 +36,8 @@ void Mul::compute_gpu(const vector<bool>& add) {
   }
 }
 
-Sum::Sum(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs)
+Sum::Sum(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
+         const param_tuple& args)
     : Operation(inputs, outputs) {
   CHECK_GE(inputs_.size(), 2);
   for (Tensor* input : inputs_) {
@@ -98,8 +100,8 @@ void WeightedSum::compute_gpu(const vector<bool>& add) {
   }
 }
 
-Average::Average(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs)
-    : Operation(inputs, outputs) {
+Average::Average(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
+    const param_tuple& args) : Operation(inputs, outputs) {
   CHECK_GE(inputs_.size(), 2);
   for (Tensor* input : inputs_) {
     CHECK_EQ(input->size(), outputs_[0]->size());

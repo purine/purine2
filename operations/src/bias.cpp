@@ -3,8 +3,8 @@
 
 namespace purine {
 
-Bias::Bias(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs)
-    : Operation(inputs, outputs)  {
+Bias::Bias(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
+    const param_tuple& args) : Operation(inputs, outputs)  {
   Size top_size = outputs_[0]->size();
   Size bias_size = inputs_[0]->size();
   CHECK_EQ(top_size.channels(), bias_size.channels());
@@ -42,7 +42,8 @@ void Bias::compute_gpu(const vector<bool>& add) {
 }
 
 BiasDown::BiasDown(const vector<Tensor*>& inputs,
-    const vector<Tensor*>& outputs) : Operation(inputs, outputs) {
+    const vector<Tensor*>& outputs, const param_tuple& args)
+    : Operation(inputs, outputs) {
   Size top_size = inputs_[0]->size();
   Size bias_size = outputs_[0]->size();
   CHECK_EQ(top_size.channels(), bias_size.channels());

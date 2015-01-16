@@ -46,8 +46,9 @@ class SoftmaxDown : public Operation {
  */
 class SoftmaxLoss : public Operation {
  public:
+  typedef tuple<> param_tuple;
   explicit SoftmaxLoss(const vector<Tensor*>& inputs,
-      const vector<Tensor*>& outputs);
+      const vector<Tensor*>& outputs, const param_tuple& args);
   virtual void compute_cpu(const vector<bool>& add);
 };
 
@@ -56,8 +57,9 @@ class SoftmaxLoss : public Operation {
  */
 class SoftmaxLossDown : public Operation {
  public:
+  typedef tuple<> param_tuple;
   explicit SoftmaxLossDown(const vector<Tensor*>& inputs,
-      const vector<Tensor*>& outputs);
+      const vector<Tensor*>& outputs, const param_tuple& args);
   virtual void compute_cpu(const vector<bool>& add);
 };
 

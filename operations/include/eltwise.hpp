@@ -11,7 +11,9 @@ namespace purine {
  */
 class Mul : public Operation {
  public:
-  explicit Mul(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs);
+  typedef tuple<> param_tuple;
+  explicit Mul(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
+      const param_tuple& args);
   virtual void compute_cpu(const vector<bool>& add);
   virtual void compute_gpu(const vector<bool>& add);
 };
@@ -21,7 +23,9 @@ class Mul : public Operation {
  */
 class Sum : public Operation {
  public:
-  explicit Sum(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs);
+  typedef tuple<> param_tuple;
+  explicit Sum(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
+      const param_tuple& args);
   virtual void compute_cpu(const vector<bool>& add);
   virtual void compute_gpu(const vector<bool>& add);
 };
@@ -45,8 +49,9 @@ class WeightedSum : public Operation {
  */
 class Average : public Operation {
  public:
+  typedef tuple<> param_tuple;
   explicit Average(const vector<Tensor*>& inputs,
-      const vector<Tensor*>& outputs);
+      const vector<Tensor*>& outputs, const param_tuple& args);
   virtual void compute_cpu(const vector<bool>& add);
   virtual void compute_gpu(const vector<bool>& add);
 };

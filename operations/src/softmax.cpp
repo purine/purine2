@@ -99,7 +99,8 @@ void SoftmaxDown::compute_gpu(const vector<bool>& add) {
 }
 
 SoftmaxLoss::SoftmaxLoss(const vector<Tensor*>& inputs,
-    const vector<Tensor*>& outputs) : Operation(inputs, outputs) {
+    const vector<Tensor*>& outputs, const param_tuple& args)
+    : Operation(inputs, outputs) {
   CHECK_EQ(outputs_[0]->size(), Size(1, 1, 1, 1));
   CHECK_EQ(inputs_[1]->size(), inputs_[0]->size());
 }
@@ -122,7 +123,8 @@ void SoftmaxLoss::compute_cpu(const vector<bool>& add) {
 }
 
 SoftmaxLossDown::SoftmaxLossDown(const vector<Tensor*>& inputs,
-    const vector<Tensor*>& outputs) : Operation(inputs, outputs) {
+    const vector<Tensor*>& outputs, const param_tuple& args)
+    : Operation(inputs, outputs) {
   CHECK_EQ(inputs_[0]->size(), outputs_[0]->size());
 }
 

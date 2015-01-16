@@ -14,8 +14,9 @@ namespace purine {
  */
 class Inner : public Operation {
  public:
-  explicit Inner(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs);
-  virtual ~Inner();
+  typedef tuple<> param_tuple;
+  explicit Inner(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
+      const param_tuple& args);
   virtual void compute_gpu(const vector<bool>& add);
   virtual void compute_cpu(const vector<bool>& add);
 };
@@ -25,9 +26,9 @@ class Inner : public Operation {
  */
 class InnerDown : public Operation {
  public:
+  typedef tuple<> param_tuple;
   explicit InnerDown(const vector<Tensor*>& inputs,
-      const vector<Tensor*>& outputs);
-  virtual ~InnerDown();
+      const vector<Tensor*>& outputs, const param_tuple& args);
   virtual void compute_gpu(const vector<bool>& add);
   virtual void compute_cpu(const vector<bool>& add);
 };
@@ -37,9 +38,9 @@ class InnerDown : public Operation {
  */
 class InnerWeight : public Operation {
  public:
+  typedef tuple<> param_tuple;
   explicit InnerWeight(const vector<Tensor*>& inputs,
-      const vector<Tensor*>& outputs);
-  virtual ~InnerWeight();
+      const vector<Tensor*>& outputs, const param_tuple& args);
   virtual void compute_gpu(const vector<bool>& add);
   virtual void compute_cpu(const vector<bool>& add);
 };

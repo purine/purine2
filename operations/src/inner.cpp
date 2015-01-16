@@ -3,8 +3,8 @@
 
 namespace purine {
 
-Inner::Inner(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs)
-    : Operation(inputs, outputs) {
+Inner::Inner(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
+    const param_tuple& args) : Operation(inputs, outputs) {
   int bottom_num = inputs_[0]->size().num();
   int top_num = outputs_[0]->size().num();
   CHECK_EQ(bottom_num, top_num);
@@ -36,7 +36,8 @@ void Inner::compute_gpu(const vector<bool>& add) {
 }
 
 InnerDown::InnerDown(const vector<Tensor*>& inputs,
-    const vector<Tensor*>& outputs) : Operation(inputs, outputs) {
+    const vector<Tensor*>& outputs, const param_tuple& args)
+    : Operation(inputs, outputs) {
   int top_num = inputs_[0]->size().num();
   int bottom_num = outputs_[0]->size().num();
   CHECK_EQ(bottom_num, top_num);
@@ -69,7 +70,8 @@ void InnerDown::compute_gpu(const vector<bool>& add) {
 }
 
 InnerWeight::InnerWeight(const vector<Tensor*>& inputs,
-    const vector<Tensor*>& outputs) : Operation(inputs, outputs) {
+    const vector<Tensor*>& outputs, const param_tuple& args)
+    : Operation(inputs, outputs) {
   int top_num = inputs_[0]->size().num();
   int bottom_num = inputs_[1]->size().num();
   CHECK_EQ(bottom_num, top_num);

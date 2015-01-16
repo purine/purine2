@@ -4,8 +4,8 @@
 
 namespace purine {
 
-Copy::Copy(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs)
-    : Operation(inputs, outputs) {
+Copy::Copy(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
+    const param_tuple& args) : Operation(inputs, outputs) {
   CHECK_EQ(inputs_[0]->size(), outputs_[0]->size());
   CHECK_EQ(inputs_[0]->rank(), outputs_[0]->rank());
 }
