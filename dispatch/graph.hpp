@@ -71,6 +71,7 @@ class Graph {
   bool input_set = false;
   bool output_set = false;
   SinkCounter sink_counter_;
+  virtual void setup() {}
  public:
   explicit Graph(int rank = 0, int device = 0);
   explicit Graph(const vector<Graph*>& inputs,
@@ -84,8 +85,6 @@ class Graph {
   virtual vector<Node*> sources() const;
   virtual vector<Node*> sinks() const;
   virtual vector<Node*> nodes() const;
-  virtual void setup(const vector<Graph*>& inputs,
-      const vector<Graph*>& outputs) {}
 
   virtual vector<Blob*> get_inputs() { return {}; }
   virtual vector<Blob*> get_outputs() { return {}; }
@@ -94,13 +93,24 @@ class Graph {
 
   inline SinkCounter& sink_counter() { return sink_counter_; }
 
+  // create op
   template <typename O>
   Op<O>* create(const typename O::param_tuple& param, const string& name,
       int rank, int device, const string& thread);
   template <typename O>
   Op<O>* create(const typename O::param_tuple& param,
       const string& name, const string& thread);
+
+  // create graph of type G
+  template <typename G>
+  G* create(const typename G::param_tuple& param, const string& name,
+      int rank, int device);
+  template <typename G>
+  G* create(const typename G::param_tuple& param, const string& name);
+
+  // create blob
   Blob* create(const Size& size, const string& name, int rank, int device);
+  Blob* create(const Size& size, const string& name);
 };
 
 }

@@ -14,7 +14,6 @@ Graph::Graph(int rank, int device) : rank_(rank), device_(device) {
 
 Graph::Graph(const vector<Graph*>& inputs, const vector<Graph*>& outputs,
     int rank, int device) {
-  setup(inputs, outputs);
 }
 
 Graph::~Graph() {
@@ -124,5 +123,8 @@ Blob* Graph::create(const Size& size, const string& name, int rank,
   return static_cast<Blob*>(g);
 }
 
+Blob* Graph::create(const Size& size, const string& name) {
+  return create(size, name, rank_, device_);
+}
 
 }
