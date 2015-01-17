@@ -20,8 +20,10 @@ void Copy::compute_cpu(const vector<bool>& add) {
 }
 
 void Copy::compute_gpu(const vector<bool>& add) {
-  const DTYPE* src = inputs_[0]->gpu_data();
-  DTYPE* dst = outputs_[0]->mutable_gpu_data();
+  const DTYPE* src = inputs_[0]->device() < 0 ? inputs_[0]->cpu_data()
+      : inputs_[0]->gpu_data();;
+  DTYPE* dst = outputs_[0]->device() < 0 ? outputs_[0]->mutable_cpu_data()
+      : outputs_[0]->mutable_gpu_data();
   CUDA_CHECK(cudaMemcpyAsync(dst, src, inputs_[0]->size().count()
           * sizeof(DTYPE), cudaMemcpyDefault, stream()));
 }

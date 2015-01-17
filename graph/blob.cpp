@@ -12,6 +12,9 @@ Blob::Blob(const Size& s, int rank, int device) : Node(rank, device) {
 }
 
 Blob::~Blob() {
+  if (cuda_event_) {
+    CUDA_CHECK(cudaEventDestroy(cuda_event_));
+  }
 }
 
 Tensor* Blob::tensor() {
