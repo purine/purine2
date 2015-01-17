@@ -33,7 +33,8 @@ class Op_ : public Node {
  public:
   explicit Op_(int rank, int device, const string& thread);
   virtual ~Op_();
-
+  virtual void run();
+  virtual void setup() = 0;
   inline string thread() const { return thread_; }
 
   Loop& loop();
@@ -49,18 +50,12 @@ class Op : public Op_ {
   typename O::param_tuple args_;
  public:
   explicit Op(const typename O::param_tuple& args,
-      int rank, int device, const string& thread)
-      : Op_(rank, device, thread), args_(args) {
-  }
+      int rank, int device, const string& thread);
   explicit Op(const typename O::param_tuple& args,
       const initializer_list<Blob*>& inputs,
       const initializer_list<Blob*>& outputs,
-      int rank, int device, const string& thread)
-      : Op(args, rank, device, thread) {
-    inputs_ = inputs;
-    outputs_ = outputs;
-  }
-  virtual void run();
+      int rank, int device, const string& thread);
+  virtual void setup();
 };
 
 }

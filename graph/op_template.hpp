@@ -19,52 +19,30 @@ using std::transform;
 namespace purine {
 
 template <typename O>
-void Op<O>::run() {
-  if (!fn_) {
-    vector<Tensor*> input_tensors(inputs_.size());
-    vector<Tensor*> output_tensors(outputs_.size());
-    transform(inputs_.begin(), inputs_.end(), input_tensors.begin(),
-        [] (Node* b) -> Tensor* { return static_cast<Blob*>(b)->tensor(); });
-    transform(outputs_.begin(), outputs_.end(), output_tensors.begin(),
-        [] (Node* b) -> Tensor* { return static_cast<Blob*>(b)->tensor(); });
-    o_.reset(new O(input_tensors, output_tensors, args_));
-  }
-  loop().post([this](){
-        vector<bool> add(outputs_.size());
-        transform(outputs_.begin(), outputs_.end(), add.begin(),
-            [] (Node* b) -> bool { return b->in() > 0; });
-        if (device_ < 0) {
-          for (Node* node : inputs_) {
-            Blob* b = static_cast<Blob*>(node);
-            if (b->cuda_event() == NULL) {
-              continue;
-            }
-            CUDA_CHECK(cudaEventSynchronize(b->cuda_event()));
-          }
-          o_->compute_cpu(add);
-        } else {
-          for (Node* node : inputs_) {
-            Blob* b = static_cast<Blob*>(node);
-            if (b->cuda_event() == NULL) {
-              continue;
-            }
-            CUDA_CHECK(cudaStreamWaitEvent(stream(), b->cuda_event(), 0));
-          }
-          o_->compute_gpu(add);
-        }
-        for (Node* output : outputs_) {
-          output->inc_in();
-        }
-      });
-  // ++sink_counter if is sink
-  if (outputs_.size() == 0) {
-    loop().post([this](){
-          if (device_ >= 0) {
-            CUDA_CHECK(cudaStreamSynchronize(stream()));
-          }
-          ++(cached_root_->sink_counter());
-        });
-  }
+Op<O>::Op(const typename O::param_tuple& args,
+      int rank, int device, const string& thread)
+      : Op_(rank, device, thread), args_(args) {
+}
+
+template <typename O>
+Op<O>::Op(const typename O::param_tuple& args,
+      const initializer_list<Blob*>& inputs,
+      const initializer_list<Blob*>& outputs,
+      int rank, int device, const string& thread)
+      : Op(args, rank, device, thread) {
+    inputs_ = inputs;
+    outputs_ = outputs;
+}
+
+template <typename O>
+void Op<O>::setup() {
+  vector<Tensor*> input_tensors(inputs_.size());
+  vector<Tensor*> output_tensors(outputs_.size());
+  transform(inputs_.begin(), inputs_.end(), input_tensors.begin(),
+      [] (Node* b) -> Tensor* { return static_cast<Blob*>(b)->tensor(); });
+  transform(outputs_.begin(), outputs_.end(), output_tensors.begin(),
+      [] (Node* b) -> Tensor* { return static_cast<Blob*>(b)->tensor(); });
+  o_.reset(new O(input_tensors, output_tensors, args_));
 }
 
 template <typename O>
