@@ -7,8 +7,8 @@
 #include <vector>
 #include <memory>
 
-#include "graph/op.hpp"
-#include "graph/blob.hpp"
+#include "dispatch/op.hpp"
+#include "dispatch/blob.hpp"
 
 using std::function;
 using std::string;

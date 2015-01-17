@@ -5,7 +5,7 @@
 #include <atomic>
 #include <vector>
 
-#include "graph/graph.hpp"
+#include "dispatch/graph.hpp"
 
 namespace purine {
 

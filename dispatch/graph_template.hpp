@@ -1,8 +1,8 @@
 #ifndef PURINE_GRAPH_TEMPLATE
 #define PURINE_GRAPH_TEMPLATE
 
-#include "graph/graph.hpp"
-#include "graph/op.hpp"
+#include "dispatch/graph.hpp"
+#include "dispatch/op.hpp"
 
 namespace purine {
 

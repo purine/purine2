@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "graph/node.hpp"
+#include "dispatch/node.hpp"
 #include "operations/operation.hpp"
 #include "operations/tensor.hpp"
 

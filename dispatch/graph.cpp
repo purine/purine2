@@ -1,9 +1,9 @@
 // Copyright Lin Min 2015
 #include <deque>
 #include <iterator>
-#include "graph/graph.hpp"
-#include "graph/node.hpp"
-#include "graph/blob.hpp"
+#include "dispatch/graph.hpp"
+#include "dispatch/node.hpp"
+#include "dispatch/blob.hpp"
 
 using std::deque;
 

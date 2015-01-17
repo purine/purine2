@@ -1,7 +1,7 @@
 // Copyright Lin Min 2015
 #include <deque>
-#include "graph/dispatcher.hpp"
-#include "graph/op.hpp"
+#include "dispatch/looper.hpp"
+#include "dispatch/op.hpp"
 
 using std::deque;
 
@@ -14,12 +14,12 @@ Op_::Op_(int rank, int device, const string& thread)
 Op_::~Op_() {
 }
 
-// find the loop from dispatcher.
+// find the loop from looper.
 // cache in the loop_ variable, next time would be faster.
 Loop& Op_::loop() {
   CHECK_EQ(rank_, current_rank());
   if (loop_ == NULL) {
-    loop_ = &Dispatcher::task_loop(device_, thread_);
+    loop_ = &Looper::task_loop(device_, thread_);
   }
   return *loop_;
 }

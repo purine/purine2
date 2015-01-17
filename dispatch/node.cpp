@@ -1,5 +1,5 @@
 // Copyright Lin Min 2015
-#include "graph/node.hpp"
+#include "dispatch/node.hpp"
 
 namespace purine {
 

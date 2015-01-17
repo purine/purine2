@@ -1,7 +1,7 @@
 
 #include <deque>
-#include "graph/op.hpp"
-#include "graph/blob.hpp"
+#include "dispatch/op.hpp"
+#include "dispatch/blob.hpp"
 
 using std::deque;
 

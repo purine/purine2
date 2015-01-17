@@ -1,6 +1,6 @@
 // Copyright Lin Min 2015
-#ifndef PURINE_DISPATCHER
-#define PURINE_DISPATCHER
+#ifndef PURINE_LOOPER
+#define PURINE_LOOPER
 
 #include <map>
 
@@ -10,24 +10,24 @@ using std::map;
 
 namespace purine {
 
-class Dispatcher {
+class Looper {
  public:
-  ~Dispatcher();
-  inline static Dispatcher& Get() {
+  ~Looper();
+  inline static Looper& Get() {
     if (!singleton_.get()) {
-      singleton_.reset(new Dispatcher());
+      singleton_.reset(new Looper());
     }
     return *singleton_;
   }
   static Loop& task_loop(int device, const string& thread);
  protected:
-  static shared_ptr<Dispatcher> singleton_;
+  static shared_ptr<Looper> singleton_;
   static map<tuple<int, string>, shared_ptr<Loop> > loops_;
  private:
-  Dispatcher();
+  Looper();
   // disable copy and assignment.
-  Dispatcher(const Dispatcher&);
-  Dispatcher& operator=(const Dispatcher&);
+  Looper(const Looper&);
+  Looper& operator=(const Looper&);
 };
 
 }

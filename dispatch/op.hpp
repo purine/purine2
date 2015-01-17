@@ -8,8 +8,8 @@
 #include <memory>
 
 #include "common/loop.hpp"
-#include "graph/blob.hpp"
-#include "graph/node.hpp"
+#include "dispatch/blob.hpp"
+#include "dispatch/node.hpp"
 #include "operations/operation.hpp"
 #include "operations/tensor.hpp"
 

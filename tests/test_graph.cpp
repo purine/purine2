@@ -4,8 +4,8 @@
 #include "operations/operation.hpp"
 #include "operations/include/conv.hpp"
 #include "operations/include/random.hpp"
-#include "graph/graph_template.hpp"
-#include "graph/op_template.hpp"
+#include "dispatch/graph_template.hpp"
+#include "dispatch/op_template.hpp"
 
 using namespace purine;
 
