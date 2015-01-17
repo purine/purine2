@@ -24,6 +24,8 @@ namespace purine {
 class Blob;
 
 class Op_ : public Node {
+  friend Op_& operator >> (const vector<Blob*>& inputs, Op_& op);
+  friend void operator >> (Op_& op, const vector<Blob*>& outputs);
  private:
   Loop* loop_ = NULL;
  protected:
@@ -42,10 +44,6 @@ class Op_ : public Node {
 
 template <typename O>
 class Op : public Op_ {
-  template <typename U>
-  friend Op<U>& operator >> (const vector<Blob*>& inputs, Op<U>& op);
-  template <typename U>
-  friend void operator >> (Op<U>& op, const vector<Blob*>& outputs);
  protected:
   typename O::param_tuple args_;
  public:

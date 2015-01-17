@@ -30,37 +30,20 @@ Op<O>::Op(const typename O::param_tuple& args,
       const initializer_list<Blob*>& outputs,
       int rank, int device, const string& thread)
       : Op(args, rank, device, thread) {
-    inputs_ = inputs;
-    outputs_ = outputs;
+    this->inputs_ = inputs;
+    this->outputs_ = outputs;
 }
 
 template <typename O>
 void Op<O>::setup() {
-  vector<Tensor*> input_tensors(inputs_.size());
-  vector<Tensor*> output_tensors(outputs_.size());
-  transform(inputs_.begin(), inputs_.end(), input_tensors.begin(),
+  vector<Tensor*> input_tensors(this->inputs_.size());
+  vector<Tensor*> output_tensors(this->outputs_.size());
+  transform(this->inputs_.begin(), this->inputs_.end(), input_tensors.begin(),
       [] (Node* b) -> Tensor* { return static_cast<Blob*>(b)->tensor(); });
-  transform(outputs_.begin(), outputs_.end(), output_tensors.begin(),
-      [] (Node* b) -> Tensor* { return static_cast<Blob*>(b)->tensor(); });
-  o_.reset(new O(input_tensors, output_tensors, args_));
-}
-
-template <typename O>
-Op<O>& operator >> (const vector<Blob*>& inputs, Op<O>& op) {
-  for (Blob* input : inputs) {
-    input->outputs_.push_back(&op);
-    op.inputs_.push_back(input);
-  }
-  return op;
-}
-
-template <typename O>
-void operator >> (Op<O>& op, const vector<Blob*>& outputs) {
-  for (Blob* output : outputs) {
-    output->inputs_.push_back(&op);
-    op.outputs_.push_back(output);
-  }
-  return;
+  transform(this->outputs_.begin(), this->outputs_.end(),
+      output_tensors.begin(), [] (Node* b) -> Tensor*
+      { return static_cast<Blob*>(b)->tensor(); });
+  this->o_.reset(new O(input_tensors, output_tensors, this->args_));
 }
 
 }

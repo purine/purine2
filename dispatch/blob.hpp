@@ -11,13 +11,11 @@ namespace purine {
 
 using std::shared_ptr;
 
-template <typename O> class Op;
+class Op_;
 
 class Blob : public Node {
-  template <typename O>
-  friend Op<O>& operator >> (const vector<Blob*>& inputs, Op<O>& op);
-  template <typename O>
-  friend void operator >> (Op<O>& op, const vector<Blob*>& outputs);
+  friend Op_& operator >> (const vector<Blob*>& inputs, Op_& op);
+  friend void operator >> (Op_& op, const vector<Blob*>& outputs);
  protected:
   shared_ptr<Tensor> tensor_;
   cudaEvent_t cuda_event_ = NULL;

@@ -66,4 +66,20 @@ void Op_::run() {
   }
 }
 
+Op_& operator >> (const vector<Blob*>& inputs, Op_& op) {
+  for (Blob* input : inputs) {
+    input->outputs_.push_back(&op);
+    op.inputs_.push_back(input);
+  }
+  return op;
+}
+
+void operator >> (Op_& op, const vector<Blob*>& outputs) {
+  for (Blob* output : outputs) {
+    output->inputs_.push_back(&op);
+    op.outputs_.push_back(output);
+  }
+  return;
+}
+
 }
