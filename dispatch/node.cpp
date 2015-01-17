@@ -8,6 +8,15 @@ Node::Node(int rank, int device)
 }
 
 Node::~Node() {
+  // disconnect from the graph
+  for (Node* input : inputs_) {
+    input->outputs_.erase(remove(input->outputs_.begin(),
+            input->outputs_.end(), this), input->outputs_.end());
+  }
+  for (Node* output : outputs_) {
+    output->inputs_.erase(remove(output->inputs_.begin(),
+            output->inputs_.end(), this), output->inputs_.end());
+  }
 }
 
 void Node::run() {
