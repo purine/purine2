@@ -27,12 +27,12 @@ purine version 2.
   and ops. The resulting Graph is self-dispatchable. By calling
   graph.run().
 
-- #### graph ####
+- #### composite ####
 
-  > contains predefined graphs. which can be used to construct larger
-  graphs. For example, all the layers in caffe can be defined as a
-  graph in purine. A network can be constructed by further connecting
-  these predefined graphs.
+  > contains predefined composite graphs. which can be used to
+  construct larger graphs. For example, all the layers in caffe can be
+  defined as a graph in purine. A network can be constructed by
+  further connecting these predefined graphs.
 
 - #### operations ####
 
@@ -45,4 +45,5 @@ purine version 2.
   operations.
 
 - #### tests ####
+
   > unit tests of the project.
