@@ -3,10 +3,12 @@
 #define PURINE_LOOPER
 
 #include <map>
+#include <mutex>
 
 #include "common/loop.hpp"
 
 using std::map;
+using std::mutex;
 
 namespace purine {
 
@@ -23,6 +25,7 @@ class Looper {
  protected:
   static shared_ptr<Looper> singleton_;
   static map<tuple<int, string>, shared_ptr<Loop> > loops_;
+  static mutex mutex_;
  private:
   Looper();
   // disable copy and assignment.

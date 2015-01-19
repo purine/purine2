@@ -21,7 +21,7 @@ class Node : public Graph {
   vector<Node*> inputs_;
   vector<Node*> outputs_;
  public:
-  explicit Node(int rank, int device);
+  explicit Node(int rank = 0, int device = 0);
   virtual ~Node();
   virtual void run();
   virtual void run_async();

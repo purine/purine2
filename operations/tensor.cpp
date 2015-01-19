@@ -14,10 +14,6 @@ Tensor::Tensor(const Size& size, int rank, int device)
   stride_ = Stride(size);
 }
 
-Tensor::Tensor(const Size& size)
-    : Tensor(size, current_rank(), current_device()) {
-}
-
 Tensor::~Tensor() {
   data_.reset();
 }

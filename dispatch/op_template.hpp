@@ -20,18 +20,8 @@ namespace purine {
 
 template <typename O>
 Op<O>::Op(const typename O::param_tuple& args,
-      int rank, int device, const string& thread)
-      : Op_(rank, device, thread), args_(args) {
-}
-
-template <typename O>
-Op<O>::Op(const typename O::param_tuple& args,
-      const initializer_list<Blob*>& inputs,
-      const initializer_list<Blob*>& outputs,
-      int rank, int device, const string& thread)
-      : Op(args, rank, device, thread) {
-    this->inputs_ = inputs;
-    this->outputs_ = outputs;
+    int rank, int device, const string& thread)
+    : Op_(rank, device, thread), args_(args) {
 }
 
 template <typename O>

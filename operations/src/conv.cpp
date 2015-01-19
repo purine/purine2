@@ -51,7 +51,10 @@ Conv::~Conv() {
 
 void Conv::compute_gpu(const vector<bool>& add) {
   if (!workspace_) {
-    workspace_.reset(new Tensor({1, 1, 1, workspace_size_}));
+    int device;
+    CUDA_CHECK(cudaGetDevice(&device));
+    workspace_.reset(new Tensor({1, 1, 1, workspace_size_},
+            current_rank(), device));
   }
   DTYPE alpha = 1.;
   DTYPE beta = add[0] ? 1. : 0.;

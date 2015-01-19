@@ -12,10 +12,6 @@ namespace purine {
 Graph::Graph(int rank, int device) : rank_(rank), device_(device) {
 }
 
-Graph::Graph(const vector<Graph*>& inputs, const vector<Graph*>& outputs,
-    int rank, int device) {
-}
-
 Graph::~Graph() {
 }
 
@@ -111,9 +107,6 @@ void Graph::sync() {
   }
 }
 
-void Graph::add_graph(Graph* g) {
-}
-
 Blob* Graph::create(const Size& size, const string& name, int rank,
     int device) {
   subgraphs_.push_back(shared_ptr<Graph>(new Blob(size, rank, device)));
@@ -125,6 +118,14 @@ Blob* Graph::create(const Size& size, const string& name, int rank,
 
 Blob* Graph::create(const Size& size, const string& name) {
   return create(size, name, rank_, device_);
+}
+
+Blob* Graph::create(shared_ptr<Tensor> tensor, const string& name) {
+  subgraphs_.push_back(shared_ptr<Graph>(new Blob(tensor)));
+  Graph* g = subgraphs_.rbegin()->get();
+  graph_name_[g] = name;
+  g->parent_ = this;
+  return static_cast<Blob*>(g);
 }
 
 }

@@ -30,6 +30,9 @@ set(BLAS_LIBRARIES ${Atlas_LIBRARIES})
 find_package(LibUV REQUIRED)
 include_directories(${LIBUV_INCLUDE_DIRS})
 
+find_package(MPI)
+include_directories(${MPI_INCLUDE_PATH})
+
 include_directories(${PROJECT_SOURCE_DIR})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
@@ -60,6 +63,7 @@ target_link_libraries(purine purine_cu
   ${CUDA_CUBLAS_LIBRARIES}
   ${CUDA_curand_LIBRARY}
   ${BLAS_LIBRARIES}
+  ${MPI_C_LIBRARIES}
   /usr/local/lib/libcudnn.so
   )
 CUDA_ADD_CUBLAS_TO_TARGET(purine)

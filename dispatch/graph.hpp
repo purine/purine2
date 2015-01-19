@@ -68,28 +68,17 @@ class Graph {
   vector<shared_ptr<Graph> > subgraphs_;
   map<Graph*, string> graph_name_;
   Graph* parent_ = NULL;
-  bool input_set = false;
-  bool output_set = false;
   SinkCounter sink_counter_;
   virtual void setup() {}
  public:
   explicit Graph(int rank = 0, int device = 0);
-  explicit Graph(const vector<Graph*>& inputs,
-      const vector<Graph*>& outputs = {}, int rank = 0, int device = 0);
-
   virtual ~Graph();
   virtual void run();
   virtual void run_async();
   virtual void sync();
-  virtual void add_graph(Graph*);
   virtual vector<Node*> sources() const;
   virtual vector<Node*> sinks() const;
   virtual vector<Node*> nodes() const;
-
-  virtual vector<Blob*> get_inputs() { return {}; }
-  virtual vector<Blob*> get_outputs() { return {}; }
-  virtual void set_inputs(const vector<Blob*>& inputs) {}
-  virtual void set_outputs(const vector<Blob*>& outputs) {}
 
   inline SinkCounter& sink_counter() { return sink_counter_; }
 
@@ -111,6 +100,8 @@ class Graph {
   // create blob
   Blob* create(const Size& size, const string& name, int rank, int device);
   Blob* create(const Size& size, const string& name);
+  Blob* create(shared_ptr<Tensor> tensor, const string& name);
+  inline string cached_name() const { return cached_name_; }
 };
 
 }

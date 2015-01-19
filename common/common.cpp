@@ -8,12 +8,9 @@
 #include <fstream>  // NOLINT(readability/streams)
 #include <glog/logging.h>
 #include <cstdlib>
-#include <arpa/inet.h>
 #include <sys/syscall.h>
 #include <glog/logging.h>
-#include <google/protobuf/text_format.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
-#include <google/protobuf/io/coded_stream.h>
+#include <mpi.h>
 
 #include "common/common.hpp"
 
@@ -22,6 +19,13 @@ using std::ios;
 using std::string;
 
 namespace purine {
+
+string mpi_strerror(int errorcode) {
+  int len;
+  char estring[MPI_MAX_ERROR_STRING];
+  MPI_Error_string(errorcode, estring, &len);
+  return string(estring, len);
+}
 
 string get_env(const string& env) {
   const char* env_value = getenv(env.c_str());
@@ -55,12 +59,10 @@ rng_t* caffe_rng() {
   return &rng_;
 }
 
-int current_device() {
-  return 0;
-}
-
 int current_rank() {
-  return 0;
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  return rank;
 }
 
 }

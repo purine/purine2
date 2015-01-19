@@ -11,6 +11,10 @@ Blob::Blob(const Size& s, int rank, int device) : Node(rank, device) {
   tensor_.reset(new Tensor(s, rank, device));
 }
 
+Blob::Blob(shared_ptr<Tensor> tensor) : Node(tensor->rank(), tensor->device()) {
+  tensor_ = tensor;
+}
+
 Blob::~Blob() {
   if (cuda_event_) {
     CUDA_CHECK(cudaEventDestroy(cuda_event_));

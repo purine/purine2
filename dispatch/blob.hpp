@@ -20,10 +20,12 @@ class Blob : public Node {
   shared_ptr<Tensor> tensor_;
   cudaEvent_t cuda_event_ = NULL;
  public:
-  explicit Blob(const Size& s, int rank, int device);
+  explicit Blob(const Size& s, int rank = 0, int device = 0);
+  Blob(shared_ptr<Tensor> tensor);
   virtual ~Blob();
   inline cudaEvent_t cuda_event() { return cuda_event_; }
   Tensor* tensor();
+  shared_ptr<Tensor> shared_tensor();
   virtual void run();
 };
 

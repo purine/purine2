@@ -12,6 +12,7 @@
 #include "dispatch/node.hpp"
 #include "operations/operation.hpp"
 #include "operations/tensor.hpp"
+#include "operations/include/mpi.hpp"
 
 using std::function;
 using std::string;
@@ -36,7 +37,6 @@ class Op_ : public Node {
   explicit Op_(int rank, int device, const string& thread);
   virtual ~Op_();
   virtual void run();
-  virtual void setup() = 0;
   inline string thread() const { return thread_; }
 
   Loop& loop();
@@ -46,14 +46,34 @@ template <typename O>
 class Op : public Op_ {
  protected:
   typename O::param_tuple args_;
+  virtual void setup();
  public:
   explicit Op(const typename O::param_tuple& args,
       int rank, int device, const string& thread);
-  explicit Op(const typename O::param_tuple& args,
-      const initializer_list<Blob*>& inputs,
-      const initializer_list<Blob*>& outputs,
-      int rank, int device, const string& thread);
+};
+
+template <>
+class Op<Irecv> : public Op_ {
+ protected:
+  typename Irecv::param_tuple args_;
   virtual void setup();
+  function<void()> mpi_test_;
+ public:
+  explicit Op(const typename Irecv::param_tuple& args,
+      int rank, int device, const string& thread);
+  virtual void run();
+};
+
+template <>
+class Op<Isend> : public Op_ {
+ protected:
+  typename Isend::param_tuple args_;
+  virtual void setup();
+  function<void()> mpi_test_;
+ public:
+  explicit Op(const typename Isend::param_tuple& args,
+      int rank, int device, const string& thread);
+  virtual void run();
 };
 
 }
