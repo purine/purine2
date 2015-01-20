@@ -43,19 +43,50 @@ void Layer::set_weight(const vector<Blob*>& weight) {
   }
 }
 
-vector<Blob*> Layer::weight_data() const {
+vector<Blob*> Layer::weight_data() {
   return first_half<Blob*>(weight_);
 }
 
-vector<Blob*> Layer::weight_diff() const {
+vector<Blob*> Layer::weight_diff() {
   return second_half<Blob*>(weight_);
 }
 
-vector<Blob*> Layer::weight(int index) const {
+vector<Blob*> Layer::weight(int index) {
   CHECK_EQ(weight_.size() % 2, 0);
   CHECK_LT(index, weight_.size() / 2);
   int middle = weight_.size() / 2;
   return { weight_[index], weight_[middle + index] };
 }
+
+vector<Blob*> Layer::bottom_data() {
+  return first_half<Blob*>(bottom_);
+}
+
+vector<Blob*> Layer::bottom_diff() {
+  return second_half<Blob*>(bottom_);
+}
+
+vector<Blob*> Layer::top_data() {
+  return first_half<Blob*>(top_);
+}
+
+vector<Blob*> Layer::top_diff() {
+  return second_half<Blob*>(top_);
+}
+
+vector<Blob*> Layer::bottom(int index) {
+  CHECK_EQ(bottom_.size() % 2, 0);
+  CHECK_LT(index, bottom_.size() / 2);
+  int middle = bottom_.size() / 2;
+  return { bottom_[index], bottom_[middle + index] };
+}
+
+vector<Blob*> Layer::top(int index) {
+  CHECK_EQ(top_.size() % 2, 0);
+  CHECK_LT(index, top_.size() / 2);
+  int middle = top_.size() / 2;
+  return { top_[index], top_[middle + index] };
+}
+
 
 }

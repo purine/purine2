@@ -1,16 +1,16 @@
 // Copyright Lin Min 2015
-#include "operations/include/copy.hpp"
+#include "operations/include/mem_copy.hpp"
 #include "caffeine/math_functions.hpp"
 
 namespace purine {
 
-Copy::Copy(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
+MemCopy::MemCopy(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
     const param_tuple& args) : Operation(inputs, outputs) {
   CHECK_EQ(inputs_[0]->size(), outputs_[0]->size());
   CHECK_EQ(inputs_[0]->rank(), outputs_[0]->rank());
 }
 
-void Copy::compute_cpu(const vector<bool>& add) {
+void MemCopy::compute_cpu(const vector<bool>& add) {
   if (inputs_[0]->cpu_data() == outputs_[0]->cpu_data()) {
     return;
   } else {
@@ -19,7 +19,12 @@ void Copy::compute_cpu(const vector<bool>& add) {
   }
 }
 
-void Copy::compute_gpu(const vector<bool>& add) {
+void MemCopy::compute_gpu(const vector<bool>& add) {
+  if (inputs_[0]->device() >= 0 && outputs_[0]->device() >=0 &&
+      inputs_[0]->device() == outputs_[0]->device() &&
+      inputs_[0]->gpu_data() == outputs_[0]->gpu_data()) {
+    return;
+  }
   const DTYPE* src = inputs_[0]->device() < 0 ? inputs_[0]->cpu_data()
       : inputs_[0]->gpu_data();;
   DTYPE* dst = outputs_[0]->device() < 0 ? outputs_[0]->mutable_cpu_data()

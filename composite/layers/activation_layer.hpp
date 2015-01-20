@@ -17,9 +17,10 @@ class ActivationLayer : public Layer {
       : Layer(rank, device) {
     std::tie(mode, inplace) = args;
   }
-  virtual ~ActivationLayer() {}
+  virtual ~ActivationLayer() override {}
 
-  virtual void setup() {
+ protected:
+  virtual void setup() override {
     CHECK(bottom_setup_);
     CHECK_EQ(bottom_.size(), 2);
     Size bottom_size = bottom_[0]->tensor()->size();

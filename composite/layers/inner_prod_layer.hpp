@@ -19,9 +19,10 @@ class InnerProdLayer : public Layer {
       const vector<Blob*>& weight = {}) : Layer(rank, device, weight) {
     std::tie(num_output) = args;
   }
-  virtual ~InnerProdLayer() {}
+  virtual ~InnerProdLayer() override {}
 
-  virtual void setup() {
+ protected:
+  virtual void setup() override {
     CHECK(bottom_setup_);
     CHECK_EQ(bottom_.size(), 2);
     Size bottom_size = bottom_[0]->tensor()->size();

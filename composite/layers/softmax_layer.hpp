@@ -19,6 +19,7 @@ class SoftmaxLayer : public Layer {
   }
   virtual ~SoftmaxLayer() {}
 
+ protected:
   virtual void setup() {
     CHECK(bottom_setup_);
     CHECK_EQ(bottom_.size(), 2);

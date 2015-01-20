@@ -26,9 +26,10 @@ class ConvLayer : public Layer {
     std::tie(pad_h, pad_w, stride_h, stride_w, kernel_h,
         kernel_w, num_output) = args;
   }
-  virtual ~ConvLayer() {}
+  virtual ~ConvLayer() override {}
 
-  virtual void setup() {
+ protected:
+  virtual void setup() override {
     CHECK(bottom_setup_);
     CHECK_EQ(bottom_.size(), 2);
     Size bottom_size = bottom_[0]->tensor()->size();

@@ -67,6 +67,22 @@ void Op_::run() {
   }
 }
 
+Op_& operator >> (const vector<Blob*>& inputs, Op_& op) {
+  for (Blob* input : inputs) {
+    input->outputs_.push_back(&op);
+    op.inputs_.push_back(input);
+  }
+  return op;
+}
+
+void operator >> (Op_& op, const vector<Blob*>& outputs) {
+  for (Blob* output : outputs) {
+    output->inputs_.push_back(&op);
+    op.outputs_.push_back(output);
+  }
+  return;
+}
+
 Op<Irecv>::Op(const typename Irecv::param_tuple& args,
     int rank, int device, const string& thread)
     : Op_(rank, device, thread), args_(args) {
@@ -158,20 +174,25 @@ void Op<Isend>::run() {
       });
 }
 
-Op_& operator >> (const vector<Blob*>& inputs, Op_& op) {
-  for (Blob* input : inputs) {
-    input->outputs_.push_back(&op);
-    op.inputs_.push_back(input);
-  }
-  return op;
+Op<MemCopy>::Op(const typename MemCopy::param_tuple& args, int rank, int device,
+    const string& thread) : Op_(rank, device, thread) {
+  // rank_ and device_ is reset when setup.
 }
 
-void operator >> (Op_& op, const vector<Blob*>& outputs) {
-  for (Blob* output : outputs) {
-    output->inputs_.push_back(&op);
-    op.outputs_.push_back(output);
+void Op<MemCopy>::setup() {
+  CHECK_EQ(inputs_.size(), 1);
+  CHECK_EQ(outputs_.size(), 1);
+  CHECK_EQ(inputs_[0]->rank(), outputs_[0]->rank());
+  this->o_.reset(new MemCopy({static_cast<Blob*>(inputs_[0])->tensor()},
+          {static_cast<Blob*>(outputs_[0])->tensor()}, tuple<>()));
+
+  // set rank and device of the Op
+  this->rank_ = inputs_[0]->rank();
+  if (inputs_[0]->device() >= 0 || outputs_[0]->device() < 0) {
+    this->device_ = inputs_[0]->device();
+  } else {
+    this->device_ = outputs_[0]->device();
   }
-  return;
 }
 
 }

@@ -18,24 +18,17 @@ class CompositeGraph : public Graph {
   bool bottom_setup_ = false;
   bool top_setup_ = false;
   virtual void setup_();
-  virtual void setup() = 0;
  public:
   CompositeGraph(int rank = 0, int device = 0);
-  virtual ~CompositeGraph();
+  virtual ~CompositeGraph() override;
 
   const vector<Blob*>& bottom();
   const vector<Blob*>& top();
   void set_bottom(const vector<Blob*>& bottom);
   void set_top(const vector<Blob*>& top);
 
-  vector<Blob*> bottom_data() const;
-  vector<Blob*> bottom_diff() const;
-  vector<Blob*> bottom(int index) const;
-
-  vector<Blob*> top_data() const;
-  vector<Blob*> top_diff() const;
-  vector<Blob*> top(int index) const;
-
+  virtual vector<Blob*> bottom(int index);
+  virtual vector<Blob*> top(int index);
 };
 
 }

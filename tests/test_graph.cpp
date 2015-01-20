@@ -5,7 +5,7 @@
 #include "operations/include/conv.hpp"
 #include "operations/include/random.hpp"
 #include "operations/include/eltwise.hpp"
-#include "operations/include/copy.hpp"
+#include "operations/include/mem_copy.hpp"
 #include "dispatch/graph_template.hpp"
 #include "dispatch/op_template.hpp"
 #include "composite/layers/conv_layer.hpp"
@@ -87,8 +87,8 @@ TEST_CASE("RunGraph", "[Graph][Thread]") {
     Blob* bottom2 = run_graph.create({1, 3, 10, 10}, "bottom2", 0, 0);
     Blob* top = run_graph.create({1, 3, 10, 10}, "top", 0, 0);
     Blob* top_cpu = run_graph.create({1, 3, 10, 10}, "top_cpu", 0, -1);
-    Op<Copy>* cp = run_graph.create<Copy>(Copy::param_tuple(),
-        "cp", 0, 0, "outbound");
+    Op<MemCopy>* cp = run_graph.create<MemCopy>(MemCopy::param_tuple(),
+        "cp", "outbound");
     B{ bottom1, bottom2 } >> (*o) >> B{ top };
     B{ top } >> *cp >> B{ top_cpu };
     Op<Constant>* c = run_graph.create<Constant>(Constant::param_tuple(1.),

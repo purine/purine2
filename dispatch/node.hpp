@@ -22,13 +22,13 @@ class Node : public Graph {
   vector<Node*> outputs_;
  public:
   explicit Node(int rank = 0, int device = 0);
-  virtual ~Node();
-  virtual void run();
-  virtual void run_async();
-  virtual vector<Node*> sources();
-  virtual vector<Node*> sinks();
-  virtual vector<Node*> nodes();
-  virtual void setup();
+  virtual ~Node() override;
+  virtual void run() override;
+  virtual void run_async() override;
+  virtual vector<Node*> sources() override;
+  virtual vector<Node*> sinks() override;
+  virtual vector<Node*> nodes() override;
+  virtual void setup() override;
 
   inline int rank() { return rank_; }
   inline int device() { return device_; }

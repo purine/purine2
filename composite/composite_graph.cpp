@@ -59,34 +59,14 @@ void CompositeGraph::set_bottom(const vector<Blob*>& bottom) {
   }
 }
 
-vector<Blob*> CompositeGraph::bottom_data() const {
-  return first_half<Blob*>(bottom_);
+vector<Blob*> CompositeGraph::bottom(int index) {
+  CHECK_LT(index, bottom_.size());
+  return { bottom_[index] };
 }
 
-vector<Blob*> CompositeGraph::bottom_diff() const {
-  return second_half<Blob*>(bottom_);
-}
-
-vector<Blob*> CompositeGraph::top_data() const {
-  return first_half<Blob*>(top_);
-}
-
-vector<Blob*> CompositeGraph::top_diff() const {
-  return second_half<Blob*>(top_);
-}
-
-vector<Blob*> CompositeGraph::bottom(int index) const {
-  CHECK_EQ(bottom_.size() % 2, 0);
-  CHECK_LT(index, bottom_.size() / 2);
-  int middle = bottom_.size() / 2;
-  return { bottom_[index], bottom_[middle + index] };
-}
-
-vector<Blob*> CompositeGraph::top(int index) const {
-  CHECK_EQ(top_.size() % 2, 0);
-  CHECK_LT(index, top_.size() / 2);
-  int middle = top_.size() / 2;
-  return { top_[index], top_[middle + index] };
+vector<Blob*> CompositeGraph::top(int index) {
+  CHECK_LT(index, top_.size());
+  return { top_[index] };
 }
 
 CompositeGraph& operator >> (const vector<Blob*>& bottom,

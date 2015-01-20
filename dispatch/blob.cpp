@@ -21,10 +21,6 @@ Blob::~Blob() {
   }
 }
 
-Tensor* Blob::tensor() {
-  return tensor_.get();
-}
-
 // this is always called from in_thread
 void Blob::run() {
   if (inputs_.size() == 0) {

@@ -1,3 +1,4 @@
+// Copyright Lin Min 2015
 #ifndef PURINE_BLOB
 #define PURINE_BLOB
 
@@ -21,12 +22,14 @@ class Blob : public Node {
   cudaEvent_t cuda_event_ = NULL;
  public:
   explicit Blob(const Size& s, int rank = 0, int device = 0);
-  Blob(shared_ptr<Tensor> tensor);
-  virtual ~Blob();
+  explicit Blob(shared_ptr<Tensor> tensor);
+  virtual ~Blob() override;
+
   inline cudaEvent_t cuda_event() { return cuda_event_; }
-  Tensor* tensor();
-  shared_ptr<Tensor> shared_tensor();
-  virtual void run();
+  inline Tensor* tensor() { return tensor_.get(); }
+  inline shared_ptr<Tensor> shared_tensor() { return tensor_; }
+
+  virtual void run() override;
 };
 
 }

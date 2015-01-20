@@ -6,10 +6,10 @@
 
 namespace purine {
 
-class Copy : public Operation {
+class MemCopy : public Operation {
  public:
   typedef tuple<> param_tuple;
-  explicit Copy(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
+  explicit MemCopy(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
       const param_tuple& args);
   virtual void compute_cpu(const vector<bool>& add);
   virtual void compute_gpu(const vector<bool>& add);

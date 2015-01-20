@@ -15,9 +15,10 @@ class PoolLayer : public Layer {
   PoolLayer(const param_tuple& args, int rank, int device)
       : Layer(rank, device), args_(args) {
   }
-  virtual void ~PoolLayer() {}
+  virtual void ~PoolLayer() override {}
 
-  virtual void setup() {
+ protected:
+  virtual void setup() override {
     CHECK(bottom_setup_);
     CHECK_EQ(bottom_.size(), 2);
     Size bottom_size = bottom_[0]->tensor()->size();

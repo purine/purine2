@@ -76,12 +76,14 @@ class Graph {
   virtual void run();
   virtual void run_async();
   virtual void sync();
-  virtual vector<Node*> sources() const;
-  virtual vector<Node*> sinks() const;
-  virtual vector<Node*> nodes() const;
+  virtual vector<Node*> sources();
+  virtual vector<Node*> sinks();
+  virtual vector<Node*> nodes();
 
   inline SinkCounter& sink_counter() { return sink_counter_; }
 
+  inline int rank() const { return rank_; }
+  inline int device() const { return device_; }
   // create op
   template <typename O>
   Op<O>* create(const typename O::param_tuple& param, const string& name,

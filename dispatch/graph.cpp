@@ -50,7 +50,10 @@ void Graph::prepare_once() {
   }
 }
 
-vector<Node*> Graph::nodes() const {
+/**
+ * @brief return all nodes in this graph, including nodes in the subgraph.
+ */
+vector<Node*> Graph::nodes() {
   deque<Graph*> que;
   vector<Node*> ret;
   std::transform(subgraphs_.begin(), subgraphs_.end(), back_inserter(que),
@@ -75,20 +78,31 @@ vector<Node*> Graph::nodes() const {
   return ret;
 }
 
-vector<Node*> Graph::sources() const {
+/**
+ * @brief return nodes that are sources of the graph
+ * (which have no preceding nodes);
+ */
+vector<Node*> Graph::sources() {
   vector<Node*>&& nodes_ = this->nodes();
   nodes_.erase(std::remove_if(nodes_.begin(), nodes_.end(),
       [](Node* n)->bool { return n->is_source() == false; }), nodes_.end());
   return nodes_;
 }
 
-vector<Node*> Graph::sinks() const {
+/**
+ * @brief return nodes that are sinks of the graph
+ * (which have no postceding nodes);
+ */
+vector<Node*> Graph::sinks() {
   vector<Node*>&& nodes_ = this->nodes();
   nodes_.erase(std::remove_if(nodes_.begin(), nodes_.end(),
           [](Node* n)->bool { return n->is_sink() == false; }), nodes_.end());
   return nodes_;
 }
 
+/**
+ * @brief run the graph.
+ */
 void Graph::run() {
   run_async();
   sync();
@@ -107,6 +121,9 @@ void Graph::sync() {
   }
 }
 
+/**
+ * @brief create blob and add the blob to the graph
+ */
 Blob* Graph::create(const Size& size, const string& name, int rank,
     int device) {
   subgraphs_.push_back(shared_ptr<Graph>(new Blob(size, rank, device)));
