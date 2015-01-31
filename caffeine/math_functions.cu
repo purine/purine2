@@ -493,11 +493,11 @@ bool purine_gpu_compare(const DTYPE* array1, const DTYPE* array2, int count) {
   CUDA_CHECK(cudaMallocHost(&a, sizeof(DTYPE) * count, cudaHostAllocPortable));
   DTYPE* b;
   CUDA_CHECK(cudaMallocHost(&b, sizeof(DTYPE) * count, cudaHostAllocPortable));
-  cudaMemcpy(a, array1, sizeof(DTYPE) * count, cudaMemcpyDefault);
-  cudaMemcpy(b, array2, sizeof(DTYPE) * count, cudaMemcpyDefault);
+  CUDA_CHECK(cudaMemcpy(a, array1, sizeof(DTYPE) * count, cudaMemcpyDefault));
+  CUDA_CHECK(cudaMemcpy(b, array2, sizeof(DTYPE) * count, cudaMemcpyDefault));
   bool ret = purine_cpu_compare(a, b, count);
-  cudaFree(a);
-  cudaFree(b);
+  CUDA_CHECK(cudaFreeHost(a));
+  CUDA_CHECK(cudaFreeHost(b));
   return ret;
 }
 
