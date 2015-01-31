@@ -98,6 +98,8 @@ vector<T> second_half(const vector<T>& vec) {
  */
 int current_rank();
 
+void print_graph(const vector<vector<string> >& print_out);
+
 }
 
 #endif

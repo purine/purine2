@@ -13,14 +13,14 @@ class SoftmaxLayer : public Layer {
   bool inplace;
  public:
   typedef tuple<string> param_tuple;
-  SoftmaxLayer(const param_tuple& args, int rank, int device)
+  SoftmaxLayer(int rank, int device, const param_tuple& args)
       : Layer(rank, device) {
     std::tie(mode) = args;
   }
   virtual ~SoftmaxLayer() {}
 
  protected:
-  virtual void setup() {
+  virtual void setup() override {
     CHECK(bottom_setup_);
     CHECK_EQ(bottom_.size(), 2);
     Size bottom_size = bottom_[0]->tensor()->size();

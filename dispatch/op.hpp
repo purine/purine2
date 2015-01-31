@@ -28,20 +28,20 @@ class Blob;
 
 class Op_ : public Node {
   friend Op_& operator >> (const vector<Blob*>& inputs, Op_& op);
-  friend void operator >> (Op_& op, const vector<Blob*>& outputs);
+  friend const vector<Blob*>& operator >> (Op_& op,
+      const vector<Blob*>& outputs);
  private:
   Loop* loop_ = NULL;
  protected:
   string thread_; // name of thread
   shared_ptr<Operation> o_;
+  bool input_setup_ = false;
+  bool output_setup_ = false;
  public:
   explicit Op_(int rank, int device, const string& thread);
   virtual ~Op_() override;
-
-  virtual void run() override;
-
+  virtual void compute() override;
   inline string thread() const { return thread_; }
-
   Loop& loop();
 };
 
@@ -65,7 +65,7 @@ class Op<Irecv> : public Op_ {
  public:
   explicit Op(const typename Irecv::param_tuple& args,
       int rank, int device, const string& thread);
-  virtual void run() override;
+  virtual void compute() override;
 };
 
 template <>
@@ -77,11 +77,15 @@ class Op<Isend> : public Op_ {
  public:
   explicit Op(const typename Isend::param_tuple& args,
       int rank, int device, const string& thread);
-  virtual void run() override;
+  virtual void compute() override;
 };
 
 template <>
 class Op<MemCopy> : public Op_ {
+  friend Op<MemCopy>& operator >> (const vector<Blob*>& inputs,
+      Op<MemCopy>& op);
+  friend const vector<Blob*>& operator >> (Op<MemCopy>& op,
+      const vector<Blob*>& outputs);
  protected:
   virtual void setup() override;
  public:

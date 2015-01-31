@@ -12,7 +12,7 @@ class PoolLayer : public Layer {
   Pool::param_tuple args_;
  public:
   typedef Pool::param_tuple param_tuple;
-  PoolLayer(const param_tuple& args, int rank, int device)
+  PoolLayer(int rank, int device, const param_tuple& args)
       : Layer(rank, device), args_(args) {
   }
   virtual void ~PoolLayer() override {}

@@ -21,7 +21,7 @@ class ConvLayer : public Layer {
  public:
   typedef vector<Blob*> B;
   typedef tuple<int, int, int, int, int, int, int> param_tuple;
-  ConvLayer(const param_tuple& args, int rank, int device,
+  ConvLayer(int rank, int device, const param_tuple& args,
       const vector<Blob*>& weight = {}) : Layer(rank, device, weight) {
     std::tie(pad_h, pad_w, stride_h, stride_w, kernel_h,
         kernel_w, num_output) = args;

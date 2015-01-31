@@ -16,7 +16,8 @@ class Op_;
 
 class Blob : public Node {
   friend Op_& operator >> (const vector<Blob*>& inputs, Op_& op);
-  friend void operator >> (Op_& op, const vector<Blob*>& outputs);
+  friend const vector<Blob*>& operator >> (Op_& op,
+      const vector<Blob*>& outputs);
  protected:
   shared_ptr<Tensor> tensor_;
   cudaEvent_t cuda_event_ = NULL;
@@ -29,7 +30,7 @@ class Blob : public Node {
   inline Tensor* tensor() { return tensor_.get(); }
   inline shared_ptr<Tensor> shared_tensor() { return tensor_; }
 
-  virtual void run() override;
+  virtual void compute() override;
 };
 
 }

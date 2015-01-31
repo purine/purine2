@@ -80,6 +80,14 @@ class Size {
     return operator>(other) || operator==(other);
   }
   friend ostream& operator<<(ostream& os, const Size& s);
+  friend Size operator + (Size size, const Size& add);
+  inline Size& operator += (const Size& add) {
+    num_ += add.num_;
+    channels_ += add.channels_;
+    height_ += add.height_;
+    width_ += add.width_;
+    return *this;
+  }
 };
 
 /**
@@ -89,6 +97,14 @@ inline ostream& operator<<(ostream& os, const Size& s) {
   os << "(" << s.num_ << ',' << s.channels_ << ','
      << s.height_ << "," << s.width_ << ")";
   return os;
+}
+
+inline Size operator + (Size size, const Size& add) {
+  size.num_ += add.num_;
+  size.channels_ += add.channels_;
+  size.height_ += add.height_;
+  size.width_ += add.width_;
+  return size;
 }
 
 class Stride {
@@ -117,6 +133,9 @@ class Stride {
     cstride_ = stride[1];
     hstride_ = stride[2];
     wstride_ = stride[3];
+  }
+  Stride(const initializer_list<int> list)
+      : Stride(vector<int>(list)) {
   }
   inline int nstride() const { return nstride_; }
   inline int cstride() const { return cstride_; }
@@ -156,6 +175,9 @@ class Offset {
     hoffset_ = offset[2];
     woffset_ = offset[3];
   }
+  Offset(const initializer_list<int> list)
+      : Offset(vector<int>(list)) {
+  }
   inline int noffset() const { return noffset_; }
   inline int coffset() const { return coffset_; }
   inline int hoffset() const { return hoffset_; }
@@ -165,6 +187,14 @@ class Offset {
         && other.woffset_ == woffset_ && other.hoffset_ == hoffset_);
   }
   friend ostream& operator<<(ostream& os, const Offset& s);
+  friend Offset operator+ (Offset offset, const Offset& add);
+  inline Offset& operator+= (const Offset& add) {
+    noffset_ += add.noffset_;
+    coffset_ += add.coffset_;
+    hoffset_ += add.hoffset_;
+    woffset_ += add.woffset_;
+    return *this;
+  }
  protected:
   int noffset_;
   int coffset_;
@@ -176,6 +206,14 @@ inline ostream& operator<<(ostream& os, const Offset& s) {
   os << "(" << s.noffset_ << ',' << s.coffset_ << ','
      << s.hoffset_ << "," << s.woffset_ << ")";
   return os;
+}
+
+inline Offset operator+ (Offset offset, const Offset& add) {
+  offset.noffset_ += add.noffset_;
+  offset.coffset_ += add.coffset_;
+  offset.hoffset_ += add.hoffset_;
+  offset.woffset_ += add.woffset_;
+  return offset;
 }
 
 }

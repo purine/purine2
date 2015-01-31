@@ -8,6 +8,7 @@
 #include "operations/include/mem_copy.hpp"
 #include "dispatch/graph_template.hpp"
 #include "dispatch/op_template.hpp"
+#include "dispatch/runnable.hpp"
 #include "composite/layers/conv_layer.hpp"
 
 using namespace purine;
@@ -15,7 +16,7 @@ using namespace purine;
 typedef vector<Blob*> B;
 
 TEST_CASE("TestGraph", "[Graph]") {
-  Graph test_graph;
+  Runnable test_graph;
   Op<Conv>* o = test_graph.create<Conv>(Conv::param_tuple(2, 2, 1, 1),
       "conv", "main");
   Blob* bottom = test_graph.create({1, 3, 10, 10}, "bottom", 0, 0);
@@ -49,7 +50,7 @@ TEST_CASE("TestGraph", "[Graph]") {
 }
 
 TEST_CASE("RunGraph", "[Graph][Thread]") {
-  Graph run_graph;
+  Runnable run_graph;
 
   /**
    * gaussian_filler >> { bottom, weight } >> conv >> { top }
@@ -118,36 +119,47 @@ TEST_CASE("Layer", "[Layer][Graph]") {
     B weight_pack = {weight, bias, weight_diff, bias_diff};
 
     SECTION("provide nothing") {
-      ConvLayer* conv_layer = g.create<ConvLayer>(
-          ConvLayer::param_tuple(2, 2, 1, 1, 5, 5, 4), "conv_layer");
+      ConvLayer* conv_layer = g.createGraph<ConvLayer>("conv_layer",
+          ConvLayer::param_tuple(2, 2, 1, 1, 5, 5, 4));
       B{ bottom, bottom_diff } >> *conv_layer;
       conv_layer->top();
-      REQUIRE(conv_layer->nodes().size() == 11);
-
       REQUIRE(conv_layer->bottom() == bottom_pack);
       REQUIRE(conv_layer->top() != top_pack);
       REQUIRE(conv_layer->weight() != weight_pack);
     }
 
     SECTION("provide top") {
-      ConvLayer* conv_layer = g.create<ConvLayer>(
-          ConvLayer::param_tuple(2, 2, 1, 1, 5, 5, 4), "conv_layer");
+      ConvLayer* conv_layer = g.createGraph<ConvLayer>("conv_layer",
+          ConvLayer::param_tuple(2, 2, 1, 1, 5, 5, 4));
       B{ bottom, bottom_diff } >> *conv_layer >> B{ top, top_diff };
-      REQUIRE(conv_layer->nodes().size() == 9);
       REQUIRE(conv_layer->bottom() == bottom_pack);
       REQUIRE(conv_layer->top() == top_pack);
       REQUIRE(conv_layer->weight() != weight_pack);
     }
 
     SECTION("provide weight and top") {
-      ConvLayer* conv_layer = g.create<ConvLayer>(
-          ConvLayer::param_tuple(2, 2, 1, 1, 5, 5, 4), "conv_layer");
+      ConvLayer* conv_layer = g.createGraph<ConvLayer>("conv_layer",
+          ConvLayer::param_tuple(2, 2, 1, 1, 5, 5, 4),
+          B{ weight, bias, weight_diff, bias_diff });
       B{ bottom, bottom_diff } >> *conv_layer >> B{ top, top_diff };
-      conv_layer->set_weight({ weight, bias, weight_diff, bias_diff });
-      REQUIRE(conv_layer->nodes().size() == 5);
       REQUIRE(conv_layer->bottom() == bottom_pack);
       REQUIRE(conv_layer->top() == top_pack);
       REQUIRE(conv_layer->weight() == weight_pack);
     }
   }
+}
+
+TEST_CASE("Operator", "[Layer][Graph]") {
+  Runnable g;
+  Blob* bottom = g.create({1, 3, 10, 10}, "bottom");
+  Blob* bottom_diff = g.create({1, 3, 10, 10}, "bottom_diff");
+  B bottom_pack = {bottom, bottom_diff};
+  // convolution layer with bottom
+  ConvLayer* conv_layer = g.createGraph<ConvLayer>("conv_layer",
+      ConvLayer::param_tuple(2, 2, 1, 1, 5, 5, 4));
+  ConvLayer* conv_layer2 = g.createGraph<ConvLayer>("conv_layer2", 1, 1,
+      ConvLayer::param_tuple(2, 2, 1, 1, 5, 5, 4));
+  bottom_pack >> *conv_layer >> *conv_layer2;
+  conv_layer2->top();
+  print_graph(g.print());
 }

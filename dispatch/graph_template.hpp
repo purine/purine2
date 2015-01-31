@@ -4,8 +4,13 @@
 #include "dispatch/graph.hpp"
 #include "dispatch/op.hpp"
 #include "dispatch/op_template.hpp"
+// #include "composite/connectable.hpp"
+// #include "composite/layer.hpp"
 
 namespace purine {
+
+class Connectable;
+class Layer;
 
 template <typename O>
 Op<O>* Graph::create(const typename O::param_tuple& param, const string& name,
@@ -24,20 +29,23 @@ Op<O>* Graph::create(const typename O::param_tuple& param,
   return create<O>(param, name, rank_, device_, thread);
 }
 
-template <typename G>
-G* Graph::create(const typename G::param_tuple& param, const string& name,
-    int rank, int device) {
-  subgraphs_.push_back(shared_ptr<Graph>(new G(param, rank, device)));
+template <typename G, typename... Args>
+G* Graph::createGraph(const string& name, const Args&... args) {
+  subgraphs_.push_back(shared_ptr<Graph>(new G(rank_, device_, args...)));
   Graph* g = subgraphs_.rbegin()->get();
   graph_name_[g] = name;
   g->parent_ = this;
   return static_cast<G*>(g);
 }
 
-template <typename G>
-G* Graph::create(const typename G::param_tuple& param,
-    const string& name) {
-  return create<G>(param, name, rank_, device_);
+template <typename G, typename... Args>
+G* Graph::createGraph(const string& name, int rank, int device,
+    const Args&... args) {
+  subgraphs_.push_back(shared_ptr<Graph>(new G(rank, device, args...)));
+  Graph* g = subgraphs_.rbegin()->get();
+  graph_name_[g] = name;
+  g->parent_ = this;
+  return static_cast<G*>(g);
 }
 
 }

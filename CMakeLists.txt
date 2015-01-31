@@ -34,6 +34,9 @@ find_package(MPI)
 include_directories(${MPI_INCLUDE_PATH})
 
 include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/../caffe/include)
+include_directories(${PROJECT_SOURCE_DIR}/../caffe/build/src)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 # set_source_files_properties(graph/graph.hpp PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} -Wno-non-template-friend")

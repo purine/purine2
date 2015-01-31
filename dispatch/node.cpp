@@ -19,36 +19,8 @@ Node::~Node() {
   }
 }
 
-void Node::run() {
+void Node::compute() {
   LOG(FATAL) << "Not Implemented";
-}
-
-void Node::run_async() {
-  LOG(FATAL) << "Not Implemented";
-}
-
-vector<Node*> Node::sources() {
-  if (this->inputs_.size() == 0 && rank_ == current_rank()) {
-    return { this };
-  } else {
-    return {};
-  }
-}
-
-vector<Node*> Node::sinks() {
-  if (this->outputs_.size() == 0 && rank_ == current_rank()) {
-    return { this };
-  } else {
-    return {};
-  }
-}
-
-vector<Node*> Node::nodes() {
-  if (rank_ == current_rank()) {
-    return { this };
-  } else {
-    return {};
-  }
 }
 
 int Node::in() const {
@@ -62,11 +34,10 @@ int Node::out() const {
 void Node::setup() {
 }
 
-// ???
 void Node::inc_in() {
   int in = in_.fetch_add(1);
   if (in + 1 == inputs_.size()) {
-    run();
+    compute();
     for (Node* node : inputs_) {
       node->inc_out();
     }

@@ -13,7 +13,7 @@ class ActivationLayer : public Layer {
   bool inplace;
  public:
   typedef tuple<string, bool> param_tuple;
-  ActivationLayer(const param_tuple& args, int rank, int device)
+  ActivationLayer(int rank, int device, const param_tuple& args)
       : Layer(rank, device) {
     std::tie(mode, inplace) = args;
   }
@@ -35,7 +35,7 @@ class ActivationLayer : public Layer {
       if (!inplace) {
         top_ = {
           create(bottom_size, "top"),
-          create(bottom_size, "top_size")
+          create(bottom_size, "top_diff")
         };
       } else {
         top_ = {

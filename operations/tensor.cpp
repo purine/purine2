@@ -26,6 +26,10 @@ int Tensor::offset(const Offset& off, const Stride& stride) {
 }
 
 void Tensor::alloc_mem(DTYPE** data, const Size& size, int rank, int device) {
+  if (size.count() == 0) {
+    *data = 0;
+    return;
+  }
   CHECK_EQ(current_rank(), rank) << "Can't allocate memory on another machine";
   if (device < 0) {
     cudaHostAlloc(data, sizeof(DTYPE) * size.count(), cudaHostAllocPortable);
@@ -37,6 +41,9 @@ void Tensor::alloc_mem(DTYPE** data, const Size& size, int rank, int device) {
 }
 
 void Tensor::free_mem(DTYPE* data, int rank, int device) {
+  if (data == NULL) {
+    return;
+  }
   CHECK_EQ(current_rank(), rank) << "can't delete memory on another machine";
   if (device < 0) {
     cudaFreeHost(data);
@@ -55,13 +62,17 @@ void Tensor::swap_memory(Tensor* other) {
 }
 
 void Tensor::slice_from(Tensor* other, const Offset& off, const Size& size) {
+  rank_ = other->rank_;
+  device_ = other->device_;
   stride_ = other->stride_;
   data_ = other->data_;
   size_ = size;
-  offset_ = off;
+  offset_ += off;
 }
 
 void Tensor::share_from(Tensor* other) {
+  rank_ = other->rank_;
+  device_ = other->device_;
   stride_ = other->stride_;
   data_ = other->data_;
   size_ = other->size_;

@@ -45,6 +45,9 @@ class Tensor {
     CHECK(device_ < 0);
     return data();
   }
+  DTYPE* mutable_data();
+  const DTYPE* data() const;
+
   bool is_contiguous() const;
 
  protected:
@@ -54,8 +57,6 @@ class Tensor {
   shared_ptr<DTYPE> data_;
   int rank_;
   int device_;
-  DTYPE* mutable_data();
-  const DTYPE* data() const;
   // static
   static int offset(const Offset& off, const Stride& stride);
   static void alloc_mem(DTYPE** data, const Size& size, int rank, int device);

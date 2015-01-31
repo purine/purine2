@@ -377,4 +377,13 @@ bool caffe_signbit(long double arg) {
     return signbit(arg);
 }
 
+bool purine_cpu_compare(const DTYPE* array1, const DTYPE* array2, int count) {
+  for (int i = 0; i < count; ++i) {
+    if (array1[i] != array2[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 }  // namespace caffe

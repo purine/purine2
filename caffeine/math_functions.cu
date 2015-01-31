@@ -488,4 +488,17 @@ template void caffe_gpu_copy<unsigned int>(const int N, const unsigned int* X,
 template void caffe_gpu_copy<float>(const int N, const float* X, float* Y);
 template void caffe_gpu_copy<double>(const int N, const double* X, double* Y);
 
+bool purine_gpu_compare(const DTYPE* array1, const DTYPE* array2, int count) {
+  DTYPE* a;
+  CUDA_CHECK(cudaMallocHost(&a, sizeof(DTYPE) * count, cudaHostAllocPortable));
+  DTYPE* b;
+  CUDA_CHECK(cudaMallocHost(&b, sizeof(DTYPE) * count, cudaHostAllocPortable));
+  cudaMemcpy(a, array1, sizeof(DTYPE) * count, cudaMemcpyDefault);
+  cudaMemcpy(b, array2, sizeof(DTYPE) * count, cudaMemcpyDefault);
+  bool ret = purine_cpu_compare(a, b, count);
+  cudaFree(a);
+  cudaFree(b);
+  return ret;
+}
+
 }  // namespace caffe

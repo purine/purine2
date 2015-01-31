@@ -2,22 +2,26 @@
 #ifndef PURINE_LAYER
 #define PURINE_LAYER
 
-#include "composite/composite_graph.hpp"
+#include "composite/connectable.hpp"
 
 namespace purine {
 
-class Layer : public CompositeGraph {
+class Layer : public Connectable {
+  friend Layer& operator >> (Layer& layer1, Layer& layer2);
+  friend Layer& operator >> (const vector<Blob*>& bottom, Layer& layer);
+  friend const vector<Blob*>& operator >> (Layer& layer,
+      const vector<Blob*>& top);
  protected:
   vector<Blob*> weight_;
-  virtual void setup_() override;
+  vector<Blob*> loss_;
  public:
-  using CompositeGraph::top;
-  using CompositeGraph::bottom;
+  using Connectable::top;
+  using Connectable::bottom;
   Layer(int rank = 0, int device = 0, const vector<Blob*>& weight = {});
   virtual ~Layer() override;
 
-  const vector<Blob*>& weight();
-  void set_weight(const vector<Blob*>& weight);
+  const vector<Blob*>& weight() const;
+  const vector<Blob*>& loss() const;
 
   vector<Blob*> weight_data();
   vector<Blob*> weight_diff();

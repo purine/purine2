@@ -2,6 +2,7 @@
 #include <deque>
 #include "dispatch/op.hpp"
 #include "dispatch/blob.hpp"
+#include "dispatch/runnable.hpp"
 
 using std::deque;
 
@@ -22,7 +23,7 @@ Blob::~Blob() {
 }
 
 // this is always called from in_thread
-void Blob::run() {
+void Blob::compute() {
   if (inputs_.size() == 0) {
     // this blob is the source of a graph.
     for (Node* out : outputs_) {
@@ -53,7 +54,7 @@ void Blob::run() {
       CUDA_CHECK(cudaEventSynchronize(cuda_event_));
     }
     // after syncing, update conditional variable.
-    ++(cached_root_->sink_counter());
+    ++(dynamic_cast<Runnable*>(cached_root_)->sink_counter());
   }
   for (Node* out : outputs_) {
     out->inc_in();

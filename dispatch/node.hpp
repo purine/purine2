@@ -23,17 +23,15 @@ class Node : public Graph {
  public:
   explicit Node(int rank = 0, int device = 0);
   virtual ~Node() override;
-  virtual void run() override;
-  virtual void run_async() override;
-  virtual vector<Node*> sources() override;
-  virtual vector<Node*> sinks() override;
-  virtual vector<Node*> nodes() override;
+  virtual void compute();
   virtual void setup() override;
 
-  inline int rank() { return rank_; }
-  inline int device() { return device_; }
-  inline bool is_source() { return inputs_.size() == 0; }
-  inline bool is_sink() { return outputs_.size() == 0; }
+  inline bool is_source() const { return inputs_.size() == 0; }
+  inline bool is_sink() const { return outputs_.size() == 0; }
+  inline const vector<Node*>& inputs() const { return inputs_; }
+  inline const vector<Node*>& outputs() const { return outputs_; }
+  inline void add_input(Node* b) { inputs_.push_back(b); }
+  inline void add_output(Node* b) { outputs_.push_back(b); }
 
   int in() const;
   int out() const;

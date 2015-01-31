@@ -1,5 +1,6 @@
 // Copyright Lin Min 2014
 
+#include <iostream>
 #include <stdint.h>
 #include <fcntl.h>
 #include <string>
@@ -17,6 +18,7 @@
 using std::fstream;
 using std::ios;
 using std::string;
+using namespace std;
 
 namespace purine {
 
@@ -63,6 +65,21 @@ int current_rank() {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   return rank;
+}
+
+void print_graph(const vector<vector<string> >& print_out) {
+  for (const vector<string>& ss : print_out) {
+    for (vector<string>::const_iterator it = ss.begin(); it != ss.end(); it++) {
+      if (it == ss.begin()) {
+        cout << *it;
+      } else {
+        cout << "  >>  " << *it;
+      }
+      if (it == ss.end() - 1) {
+        cout << endl;
+      }
+    }
+  }
 }
 
 }

@@ -1,6 +1,7 @@
 // Copyright Lin Min 2015
 #include <deque>
 #include <iterator>
+#include <string>
 #include "dispatch/graph.hpp"
 #include "dispatch/node.hpp"
 #include "dispatch/blob.hpp"
@@ -13,41 +14,6 @@ Graph::Graph(int rank, int device) : rank_(rank), device_(device) {
 }
 
 Graph::~Graph() {
-}
-
-/**
- * @fn prepare_once
- * @brief is called only once before first run.
- *        the purpose of this function is to initialize name_ and root_
- *        for all the subgraphs.
- */
-void Graph::prepare_once() {
-  if (prepared_) {
-    return;
-  } else {
-    prepared_ = true;
-    deque<Graph*> que;
-    std::transform(subgraphs_.begin(), subgraphs_.end(), back_inserter(que),
-        [this](const shared_ptr<Graph>& g)->Graph* {
-          g->cached_name_ = "<root>::" + graph_name_[g.get()];
-          g->cached_root_ = this;
-          return g.get();
-        });
-    while (que.size() != 0) {
-      Graph* front_g = que.front();
-      que.pop_front();
-      std::transform(front_g->subgraphs_.begin(), front_g->subgraphs_.end(),
-          back_inserter(que),
-          [this, front_g](const shared_ptr<Graph>& g)->Graph* {
-            g->cached_name_ = front_g->cached_name_
-                + front_g->graph_name_[g.get()];
-            g->cached_root_ = this;
-            return g.get();
-          });
-    }
-    cached_sources_ = sources();
-    cached_sinks_ = sinks();
-  }
 }
 
 /**
@@ -65,7 +31,7 @@ vector<Node*> Graph::nodes() {
     que.pop_front();
     if (g->subgraphs_.size() == 0) {
       Node* n = dynamic_cast<Node*>(g);
-      if (n->rank() == current_rank()) {
+      if (n != NULL && n->rank() == current_rank()) {
         ret.push_back(n);
       }
     } else {
@@ -76,49 +42,6 @@ vector<Node*> Graph::nodes() {
     }
   }
   return ret;
-}
-
-/**
- * @brief return nodes that are sources of the graph
- * (which have no preceding nodes);
- */
-vector<Node*> Graph::sources() {
-  vector<Node*>&& nodes_ = this->nodes();
-  nodes_.erase(std::remove_if(nodes_.begin(), nodes_.end(),
-      [](Node* n)->bool { return n->is_source() == false; }), nodes_.end());
-  return nodes_;
-}
-
-/**
- * @brief return nodes that are sinks of the graph
- * (which have no postceding nodes);
- */
-vector<Node*> Graph::sinks() {
-  vector<Node*>&& nodes_ = this->nodes();
-  nodes_.erase(std::remove_if(nodes_.begin(), nodes_.end(),
-          [](Node* n)->bool { return n->is_sink() == false; }), nodes_.end());
-  return nodes_;
-}
-
-/**
- * @brief run the graph.
- */
-void Graph::run() {
-  run_async();
-  sync();
-}
-
-void Graph::run_async() {
-  prepare_once();
-  for (Node* source : cached_sources_) {
-    source->run();
-  }
-}
-
-void Graph::sync() {
-  if (sink_counter_ == cached_sinks_.size()) {
-    return;
-  }
 }
 
 /**

@@ -242,33 +242,8 @@ void caffe_gpu_fabs(const int n, const Dtype* x, Dtype* y);
 template <typename Dtype>
 void caffe_gpu_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);
 
-template <typename Dtype>
-void max_pool_up(const Dtype* bottom_data, const int num, const int channels,
-    const int height, const int width, const int pooled_height,
-    const int pooled_width, const int kernel_h, const int kernel_w,
-    const int stride_h, const int stride_w, const int pad_h, const int pad_w,
-    Dtype* top_data, Dtype* top_mask);
-
-template <typename Dtype>
-void max_pool_down(const Dtype* top_diff, const Dtype* top_mask, const int num,
-    const int channels, const int height, const int width,
-    const int pooled_height, const int pooled_width, const int kernel_h,
-    const int kernel_w, const int stride_h, const int stride_w, const int pad_h,
-    const int pad_w, Dtype* bottom_diff);
-
-template <typename Dtype>
-void ave_pool_up(const Dtype* bottom, const int num, const int channels,
-    const int height, const int width, const int pooled_height,
-    const int pooled_width, const int kernel_h, const int kernel_w,
-    const int stride_h, const int stride_w, const int pad_h, const int pad_w,
-    Dtype* top);
-
-template <typename Dtype>
-void ave_pool_down(const Dtype* top_diff, const int num, const int channels,
-    const int height, const int width, const int pooled_height,
-    const int pooled_width, const int kernel_h, const int kernel_w,
-    const int stride_h, const int stride_w, const int pad_h, const int pad_w,
-    Dtype* bottom_diff);
+bool purine_cpu_compare(const DTYPE* array1, const DTYPE* array2, int count);
+bool purine_gpu_compare(const DTYPE* array1, const DTYPE* array2, int count);
 
 #define DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(name, operation) \
 template<typename Dtype> \

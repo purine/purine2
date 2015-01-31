@@ -15,7 +15,7 @@ class InnerProdLayer : public Layer {
  public:
   typedef vector<Blob*> B;
   typedef tuple<int> param_tuple;
-  InnerProdLayer(const param_tuple& args, int rank, int device,
+  InnerProdLayer(int rank, int device, const param_tuple& args,
       const vector<Blob*>& weight = {}) : Layer(rank, device, weight) {
     std::tie(num_output) = args;
   }
@@ -34,7 +34,7 @@ class InnerProdLayer : public Layer {
 
     // check weight
     if (weight_.size() != 0) {
-      CHECK(weight_.size(), 4);
+      CHECK_EQ(weight_.size(), 4);
       CHECK_EQ(weight_[0]->tensor()->size(), expect_weight_size);
       CHECK_EQ(weight_[1]->tensor()->size(), expect_bias_size);
       CHECK_EQ(weight_[2]->tensor()->size(), expect_weight_size);
@@ -72,7 +72,7 @@ class InnerProdLayer : public Layer {
 
     // forward
     B{ bottom_[0], weight_[0] } >> *inner_up >> B{ top_[0] };
-    B{ weight_[1] } >> *bias_up >> B{ top_p[0] };
+    B{ weight_[1] } >> *bias_up >> B{ top_[0] };
     // backward
     B{ top_[1], weight_[0] } >> *inner_down >> B{ bottom_[1] };
     B{ top_[1], bottom_[0] } >> *inner_weight >> B{ weight_[2] };

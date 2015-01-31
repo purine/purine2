@@ -3,6 +3,7 @@
 #include "dispatch/looper.hpp"
 #include "dispatch/op.hpp"
 #include "dispatch/blob.hpp"
+#include "dispatch/runnable.hpp"
 
 using std::deque;
 
@@ -25,7 +26,7 @@ Loop& Op_::loop() {
   return *loop_;
 }
 
-void Op_::run() {
+void Op_::compute() {
   if (!o_) {
     setup();
   }
@@ -62,25 +63,29 @@ void Op_::run() {
           if (device_ >= 0) {
             CUDA_CHECK(cudaStreamSynchronize(stream()));
           }
-          ++(cached_root_->sink_counter());
+          ++(dynamic_cast<Runnable*>(cached_root_)->sink_counter());
         });
   }
 }
 
 Op_& operator >> (const vector<Blob*>& inputs, Op_& op) {
+  CHECK(!op.input_setup_);
   for (Blob* input : inputs) {
     input->outputs_.push_back(&op);
     op.inputs_.push_back(input);
   }
+  op.input_setup_ = true;
   return op;
 }
 
-void operator >> (Op_& op, const vector<Blob*>& outputs) {
+const vector<Blob*>& operator >> (Op_& op, const vector<Blob*>& outputs) {
+  CHECK(!op.output_setup_);
   for (Blob* output : outputs) {
     output->inputs_.push_back(&op);
     op.outputs_.push_back(output);
   }
-  return;
+  op.output_setup_ = true;
+  return outputs;
 }
 
 Op<Irecv>::Op(const typename Irecv::param_tuple& args,
@@ -96,7 +101,7 @@ Op<Irecv>::Op(const typename Irecv::param_tuple& args,
       }
       // ++sink_counter if is sink
       if (outputs_.size() == 0) {
-        ++(cached_root_->sink_counter());
+        ++(dynamic_cast<Runnable*>(cached_root_)->sink_counter());
       }
     } else {
       loop().post(mpi_test_);
@@ -115,7 +120,7 @@ void Op<Irecv>::setup() {
   this->o_.reset(new Irecv(input_tensors, output_tensors, this->args_));
 }
 
-void Op<Irecv>::run() {
+void Op<Irecv>::compute() {
   if (!o_) {
     setup();
   }
@@ -141,7 +146,7 @@ Op<Isend>::Op(const typename Isend::param_tuple& args,
     int flag;
     MPI_CHECK(MPI_Test(request, &flag, MPI_STATUS_IGNORE));
     if (flag) {
-      ++(cached_root_->sink_counter());
+      ++(dynamic_cast<Runnable*>(cached_root_)->sink_counter());
     } else {
       loop().post(mpi_test_);
     }
@@ -159,7 +164,7 @@ void Op<Isend>::setup() {
   this->o_.reset(new Isend(input_tensors, output_tensors, this->args_));
 }
 
-void Op<Isend>::run() {
+void Op<Isend>::compute() {
   if (!o_) {
     setup();
   }
@@ -185,14 +190,43 @@ void Op<MemCopy>::setup() {
   CHECK_EQ(inputs_[0]->rank(), outputs_[0]->rank());
   this->o_.reset(new MemCopy({static_cast<Blob*>(inputs_[0])->tensor()},
           {static_cast<Blob*>(outputs_[0])->tensor()}, tuple<>()));
+}
 
-  // set rank and device of the Op
-  this->rank_ = inputs_[0]->rank();
-  if (inputs_[0]->device() >= 0 || outputs_[0]->device() < 0) {
-    this->device_ = inputs_[0]->device();
-  } else {
-    this->device_ = outputs_[0]->device();
+Op<MemCopy>& operator >> (const vector<Blob*>& inputs, Op<MemCopy>& op) {
+  CHECK(!op.input_setup_);
+  for (Blob* input : inputs) {
+    input->add_output(&op);
+    op.add_input(input);
   }
+  op.input_setup_ = true;
+  if (op.input_setup_ && op.output_setup_) {
+    op.rank_ = op.inputs_[0]->rank();
+    if (op.inputs_[0]->device() >= 0 || op.outputs_[0]->device() < 0) {
+      op.device_ = op.inputs_[0]->device();
+    } else {
+      op.device_ = op.outputs_[0]->device();
+    }
+  }
+  return op;
+}
+
+const vector<Blob*>& operator >> (Op<MemCopy>& op,
+    const vector<Blob*>& outputs) {
+  CHECK(!op.output_setup_);
+  for (Blob* output : outputs) {
+    output->add_input(&op);
+    op.add_output(output);
+  }
+  op.output_setup_ = true;
+  if (op.output_setup_ && op.input_setup_) {
+    op.rank_ = op.inputs_[0]->rank();
+    if (op.inputs_[0]->device() >= 0 || op.outputs_[0]->device() < 0) {
+      op.device_ = op.inputs_[0]->device();
+    } else {
+      op.device_ = op.outputs_[0]->device();
+    }
+  }
+  return outputs;
 }
 
 }
