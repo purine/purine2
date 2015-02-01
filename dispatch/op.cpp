@@ -27,10 +27,11 @@ Loop& Op_::loop() {
 }
 
 void Op_::compute() {
-  if (!o_) {
-    setup();
-  }
   loop().post([this](){
+        // put setup code inside..
+        if (!this->o_) {
+          this->setup();
+        }
         vector<bool> add(outputs_.size());
         transform(outputs_.begin(), outputs_.end(), add.begin(),
             [] (Node* b) -> bool { return b->in() > 0; });
