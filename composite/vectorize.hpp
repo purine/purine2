@@ -115,7 +115,7 @@ void Vectorize<T>::set_top(const vector<vector<Blob*> >& top) {
   }
   CHECK_EQ(top_.size(), graphs_.size());
   for (int i = 0; i < top_.size(); ++i) {
-    graphs_[i] >> top_[i];
+    *graphs_[i] >> top_[i];
   }
 }
 
