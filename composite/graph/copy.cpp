@@ -72,10 +72,6 @@ Copy& operator >> (Connectable& graph, Copy& copy) {
   return copy;
 }
 
-Copy& operator >> (Copy& copy1, Copy& copy2) {
-  LOG(FATAL) << "Connecting Copy graphs";
-}
-
 Copy& operator >> (const vector<Blob*>& inputs, Copy& copy) {
   copy.set_bottom(inputs);
   return copy;

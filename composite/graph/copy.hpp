@@ -7,6 +7,9 @@ using std::pair;
 
 namespace purine {
 
+class Copy;
+Copy& operator >> (Copy& copy1, Copy& copy2) = delete;
+
 /**
  * { src } >> copy >> { dest }
  * copy's rank_ and device_ denotes the output location
@@ -14,7 +17,6 @@ namespace purine {
 class Copy : public Connectable {
   friend Connectable& operator >> (Copy& copy, Connectable& graph);
   friend Copy& operator >> (Connectable& graph, Copy& copy);
-  friend Copy& operator >> (Copy& copy1, Copy& copy2);
   friend Copy& operator >> (const vector<Blob*>& inputs, Copy& copy);
   friend const vector<Blob*>& operator >> (Copy& copy,
       const vector<Blob*>& outputs);
