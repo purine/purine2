@@ -21,9 +21,9 @@ class SoftmaxLossLayer : public Layer {
     };
     // set loss_scale
     loss_[1]->mutable_cpu_data()[0] = -1 * loss_scale;
+    top_setup_ = true;
   }
   virtual ~SoftmaxLossLayer() override {}
-
  protected:
   virtual void setup() {
     CHECK(bottom_setup_);
