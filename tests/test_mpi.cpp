@@ -18,14 +18,14 @@ TEST_CASE("TestMPI", "[MPI][Thread]") {
   Runnable g;
   SECTION("Isend and Irecv") {
     int rank = current_rank();
-    Blob* src = g.create({1, 3, 10, 10}, "src", 0, -1);
-    Blob* dest = g.create({1, 3, 10, 10}, "dest", 1, -1);
-    Op<Constant>* c = g.create<Constant>(Constant::param_tuple(1.),
-        "constant", 0, -1, "main");
-    Op<Isend>* send = g.create<Isend>(Isend::param_tuple(0, dest->rank()),
-        "send", 0, -1, "main");
-    Op<Irecv>* recv = g.create<Irecv>(Irecv::param_tuple(0, src->rank()),
-        "recv", 1, -1, "main");
+    Blob* src = g.create("src", 0, -1, {1, 3, 10, 10});
+    Blob* dest = g.create("dest", 1, -1, {1, 3, 10, 10});
+    Op<Constant>* c = g.create<Constant>("constant", 0, -1, "main",
+        Constant::param_tuple(1.));
+    Op<Isend>* send = g.create<Isend>("send", 0, -1, "main",
+        Isend::param_tuple(0, dest->rank()));
+    Op<Irecv>* recv = g.create<Irecv>("recv", 1, -1, "main",
+        Irecv::param_tuple(0, src->rank()));
     // connect
     *c >> B{ src };
     B{ src } >> *send;

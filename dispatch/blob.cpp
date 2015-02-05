@@ -8,8 +8,8 @@ using std::deque;
 
 namespace purine {
 
-Blob::Blob(const Size& s, int rank, int device) : Node(rank, device) {
-  tensor_.reset(new Tensor(s, rank, device));
+Blob::Blob(int rank, int device, const Size& s) : Node(rank, device) {
+  tensor_.reset(new Tensor(rank, device, s));
 }
 
 Blob::Blob(shared_ptr<Tensor> tensor) : Node(tensor->rank(), tensor->device()) {

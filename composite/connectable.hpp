@@ -18,6 +18,9 @@ class Connectable : public Graph {
   vector<Blob*> top_;
   bool bottom_setup_ = false;
   bool top_setup_ = false;
+  bool flexible_ = false; // whether the rank and device are flexible.
+  // if not, inputs and outputs must be on the same rank and device as the
+  // connectable.
  public:
   Connectable(int rank = 0, int device = 0);
   virtual ~Connectable() override;
@@ -29,6 +32,8 @@ class Connectable : public Graph {
 
   virtual vector<Blob*> bottom(int index);
   virtual vector<Blob*> top(int index);
+
+  bool FLEXIBLE() const { return flexible_; }
 };
 
 }

@@ -22,7 +22,7 @@ class Blob : public Node {
   shared_ptr<Tensor> tensor_;
   cudaEvent_t cuda_event_ = NULL;
  public:
-  explicit Blob(const Size& s, int rank = 0, int device = 0);
+  explicit Blob(int rank, int device, const Size& size);
   explicit Blob(shared_ptr<Tensor> tensor);
   virtual ~Blob() override;
 

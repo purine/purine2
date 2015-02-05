@@ -41,10 +41,10 @@ class InnerProdLayer : public Layer {
       CHECK_EQ(weight_[3]->tensor()->size(), expect_bias_size);
     } else {
       weight_ = {
-        create(expect_weight_size, "weight"),
-        create(expect_bias_size, "bias"),
-        create(expect_weight_size, "weight_diff"),
-        create(expect_bias_size, "bias_diff")
+        create("weight", expect_weight_size),
+        create("bias", expect_bias_size),
+        create("weight_diff", expect_weight_size),
+        create("bias_diff", expect_bias_size)
       };
     }
 
@@ -56,19 +56,19 @@ class InnerProdLayer : public Layer {
       }
     } else {
       top_ = {
-        create(expect_top_size, "top"),
-        create(expect_top_size, "top_diff")
+        create("top", expect_top_size),
+        create("top_diff", expect_top_size)
       };
     }
 
     // create ops
-    Op<Inner>* inner_up = create<Inner>(tuple<>(), "inner_up", "main");
-    Op<InnerDown>* inner_down = create<InnerDown>(tuple<>(),
-        "inner_down", "main");
-    Op<InnerWeight>* inner_weight = create<InnerWeight>(tuple<>(),
-        "inner_weight", "main");
-    Op<Bias>* bias_up = create<Bias>(tuple<>(), "bias_up", "main");
-    Op<BiasDown>* bias_down = create<BiasDown>(tuple<>(), "bias_down", "main");
+    Op<Inner>* inner_up = create<Inner>("inner_up", "main", tuple<>());
+    Op<InnerDown>* inner_down = create<InnerDown>("inner_down", "main",
+        tuple<>());
+    Op<InnerWeight>* inner_weight = create<InnerWeight>("inner_weight", "main",
+        tuple<>());
+    Op<Bias>* bias_up = create<Bias>("bias_up", "main", tuple<>());
+    Op<BiasDown>* bias_down = create<BiasDown>("bias_down", "main", tuple<>());
 
     // forward
     B{ bottom_[0], weight_[0] } >> *inner_up >> B{ top_[0] };

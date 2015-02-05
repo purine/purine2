@@ -28,15 +28,15 @@ class ConcatLayer : public Layer {
     CHECK(bottom_setup_);
 
     // concat
-    Concat* concat = createGraph<Concat>("concat", dim);
+    Concat* concat = createGraph<Concat>("concat", Concat::param_tuple(dim));
     bottom_data() >> *concat;
 
     // split
     top_ = {
       concat->top()[0],
-      create(concat->top()[0]->tensor()->size(), "top_diff")
+      create("top_diff", concat->top()[0]->tensor()->size())
     };
-    Split* split = createGraph<Split>("split", dim);
+    Split* split = createGraph<Split>("split", Concat::param_tuple(dim));
     top_data() >> *split >> bottom_diff();
   }
 };

@@ -7,6 +7,8 @@
 
 namespace purine {
 
+typedef vector<Blob*> B;
+
 class ActivationLayer : public Layer {
  protected:
   string mode;
@@ -34,22 +36,22 @@ class ActivationLayer : public Layer {
     } else {
       if (!inplace) {
         top_ = {
-          create(bottom_size, "top"),
-          create(bottom_size, "top_diff")
+          create("top", bottom_size),
+          create("top_diff", bottom_size)
         };
       } else {
         top_ = {
-          create(bottom_[0]->shared_tensor(), "top"),
-          create(bottom_[1]->shared_tensor(), "top_diff")
+          create("top", bottom_[0]->shared_tensor()),
+          create("top_diff", bottom_[1]->shared_tensor())
         };
       }
     }
 
     // create ops
-    Op<Activation>* activation_up = create<Activation>(make_tuple(mode),
-        "activation_up", "main");
+    Op<Activation>* activation_up = create<Activation>("activation_up", "main",
+        make_tuple(mode));
     Op<ActivationDown>* activation_down = create<ActivationDown>(
-        make_tuple(mode), "activation_down", "main");
+        "activation_down", "main", make_tuple(mode));
 
     // forward
     B{ bottom_[0] } >> *activation_up >> B{ top_[0] };

@@ -9,13 +9,18 @@ namespace purine {
 
 class PoolLayer : public Layer {
  protected:
+  string method;
+  int kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w;
   Pool::param_tuple args_;
  public:
   typedef Pool::param_tuple param_tuple;
   PoolLayer(int rank, int device, const param_tuple& args)
-      : Layer(rank, device), args_(args) {
+      : Layer(rank, device) {
+    std::tie(method, kernel_h, kernel_w, stride_h, stride_w, pad_h, pad_w)
+        = args;
+    args_ = args;
   }
-  virtual void ~PoolLayer() override {}
+  virtual ~PoolLayer() override {}
 
  protected:
   virtual void setup() override {
@@ -37,20 +42,19 @@ class PoolLayer : public Layer {
       }
     } else {
       top_ = {
-        create(expect_top_size, "top"),
-        create(expect_top_size, "top_diff")
+        create("top", expect_top_size),
+        create("top_diff", expect_top_size)
       };
     }
+    // create ops
+    Op<Pool>* pool_up = create<Pool>("pool_up", "main", args_);
+    Op<PoolDown>* pool_down = create<PoolDown>("pool_down", "main", args_);
+
+    // forward
+    B{ bottom_[0] } >> *pool_up >> B{ top_[0] };
+    // backward
+    B{ top_[1], top_[0], bottom_[0] } >> *pool_down >> B{ bottom_[1] };
   }
-
-  // create ops
-  Op<Pool>* pool_up = create<Pool>(args_, "pool_up", "main");
-  Op<PoolDown>* pool_down = create<PoolDown>(args_, "pool_down", "main");
-
-  // forward
-  B{ bottom_[0] } >> *pool_up >> B{ top_[0] };
-  // backward
-  B{ top_[1], top_[0], bottom_[0] } >> *pool_down >> B{ bottom_[1] };
 };
 
 }

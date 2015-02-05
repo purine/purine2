@@ -19,8 +19,8 @@ using std::transform;
 namespace purine {
 
 template <typename O>
-Op<O>::Op(const typename O::param_tuple& args,
-    int rank, int device, const string& thread)
+Op<O>::Op(int rank, int device, const string& thread,
+    const typename O::param_tuple& args)
     : Op_(rank, device, thread), args_(args) {
 }
 

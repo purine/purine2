@@ -17,11 +17,11 @@ typedef vector<Blob*> B;
 
 TEST_CASE("TestGraph", "[Graph]") {
   Runnable test_graph;
-  Op<Conv>* o = test_graph.create<Conv>(Conv::param_tuple(2, 2, 1, 1),
-      "conv", "main");
-  Blob* bottom = test_graph.create({1, 3, 10, 10}, "bottom", 0, 0);
-  Blob* top = test_graph.create({1, 3, 10, 10}, "top", 0, 0);
-  Blob* weight = test_graph.create({3, 3, 5, 5}, "weight", 0, 0);
+  Op<Conv>* o = test_graph.create<Conv>("conv", "main",
+      Conv::param_tuple(2, 2, 1, 1));
+  Blob* bottom = test_graph.create("bottom", 0, 0, {1, 3, 10, 10});
+  Blob* top = test_graph.create("top", 0, 0, {1, 3, 10, 10});
+  Blob* weight = test_graph.create("weight", 0, 0, {3, 3, 5, 5});
   B{ bottom, weight } >> (*o) >> B{ top };
 
   SECTION("graph node number test") {
@@ -56,22 +56,22 @@ TEST_CASE("RunGraph", "[Graph][Thread]") {
    * gaussian_filler >> { bottom, weight } >> conv >> { top }
    */
   SECTION("single convolution") {
-    Op<Conv>* o = run_graph.create<Conv>(Conv::param_tuple(2, 2, 1, 1),
-        "conv", 0, 0, "main");
-    Blob* bottom = run_graph.create({1, 3, 10, 10}, "bottom", 0, 0);
-    Blob* top = run_graph.create({1, 4, 10, 10}, "top", 0, 0);
-    Blob* weight = run_graph.create({4, 3, 5, 5}, "weight", 0, 0);
+    Op<Conv>* o = run_graph.create<Conv>("conv", 0, 0, "main",
+        Conv::param_tuple(2, 2, 1, 1));
+    Blob* bottom = run_graph.create("bottom", 0, 0, {1, 3, 10, 10});
+    Blob* top = run_graph.create("top", 0, 0, {1, 4, 10, 10});
+    Blob* weight = run_graph.create("weight", 0, 0, {4, 3, 5, 5});
     B{ bottom, weight } >> (*o) >> B{ top };
 
     SECTION("initializer in main thread") {
-      Op<Gaussian>* g = run_graph.create<Gaussian>(
-          Gaussian::param_tuple(0., 1.), "gaussian", 0, 0, "main");
+      Op<Gaussian>* g = run_graph.create<Gaussian>("gaussian", 0, 0, "main",
+          Gaussian::param_tuple(0., 1.));
       (*g) >> B{ bottom, weight };
       run_graph.run();
     }
     SECTION("initializer in another thread") {
-      Op<Gaussian>* g = run_graph.create<Gaussian>(
-          Gaussian::param_tuple(0., 1.), "gaussian", 0, 0, "main");
+      Op<Gaussian>* g = run_graph.create<Gaussian>("gaussian", 0, 0, "main",
+          Gaussian::param_tuple(0., 1.));
       (*g) >> B{ bottom, weight };
       run_graph.run();
     }
@@ -82,18 +82,17 @@ TEST_CASE("RunGraph", "[Graph][Thread]") {
    *                 >> copy >> { cpu_top }
    */
   SECTION("summation") {
-    Op<Sum>* o = run_graph.create<Sum>(Sum::param_tuple(),
-        "sum", 0, 0, "main");
-    Blob* bottom1 = run_graph.create({1, 3, 10, 10}, "bottom1", 0, 0);
-    Blob* bottom2 = run_graph.create({1, 3, 10, 10}, "bottom2", 0, 0);
-    Blob* top = run_graph.create({1, 3, 10, 10}, "top", 0, 0);
-    Blob* top_cpu = run_graph.create({1, 3, 10, 10}, "top_cpu", 0, -1);
-    Op<MemCopy>* cp = run_graph.create<MemCopy>(MemCopy::param_tuple(),
-        "cp", "outbound");
+    Op<Sum>* o = run_graph.create<Sum>("sum", 0, 0, "main", Sum::param_tuple());
+    Blob* bottom1 = run_graph.create("bottom1", 0, 0, {1, 3, 10, 10});
+    Blob* bottom2 = run_graph.create("bottom2", 0, 0, {1, 3, 10, 10});
+    Blob* top = run_graph.create("top", 0, 0, {1, 3, 10, 10});
+    Blob* top_cpu = run_graph.create("top_cpu", 0, -1, {1, 3, 10, 10});
+    Op<MemCopy>* cp = run_graph.create<MemCopy>("cp", "outbound",
+        MemCopy::param_tuple());
     B{ bottom1, bottom2 } >> (*o) >> B{ top };
     B{ top } >> *cp >> B{ top_cpu };
-    Op<Constant>* c = run_graph.create<Constant>(Constant::param_tuple(1.),
-        "constant", 0, 0, "main");
+    Op<Constant>* c = run_graph.create<Constant>("constant", 0, 0, "main",
+        Constant::param_tuple(1.));
     (*c) >> B{ bottom1, bottom2 };
     run_graph.run();
     Tensor* t = top_cpu->tensor();
@@ -106,21 +105,21 @@ TEST_CASE("RunGraph", "[Graph][Thread]") {
 TEST_CASE("Layer", "[Layer][Graph]") {
   Graph g;
   SECTION("ConvLayer") {
-    Blob* bottom = g.create({1, 3, 10, 10}, "bottom");
-    Blob* top = g.create({1, 4, 10, 10}, "top");
-    Blob* weight = g.create({4, 3, 5, 5}, "weight");
-    Blob* bias = g.create({1, 4, 1, 1}, "bias");
-    Blob* bottom_diff = g.create({1, 3, 10, 10}, "bottom_diff");
-    Blob* top_diff = g.create({1, 4, 10, 10}, "top_diff");
-    Blob* weight_diff = g.create({4, 3, 5, 5}, "weight_diff");
-    Blob* bias_diff = g.create({1, 4, 1, 1}, "bias_diff");
+    Blob* bottom = g.create("bottom", {1, 3, 10, 10});
+    Blob* top = g.create("top", {1, 4, 10, 10});
+    Blob* weight = g.create("weight", {4, 3, 5, 5});
+    Blob* bias = g.create("bias", {1, 4, 1, 1});
+    Blob* bottom_diff = g.create("bottom_diff", {1, 3, 10, 10});
+    Blob* top_diff = g.create("top_diff", {1, 4, 10, 10});
+    Blob* weight_diff = g.create("weight_diff", {4, 3, 5, 5});
+    Blob* bias_diff = g.create("bias_diff", {1, 4, 1, 1});
     B bottom_pack = {bottom, bottom_diff};
     B top_pack = {top, top_diff};
     B weight_pack = {weight, bias, weight_diff, bias_diff};
 
     SECTION("provide nothing") {
       ConvLayer* conv_layer = g.createGraph<ConvLayer>("conv_layer",
-          ConvLayer::param_tuple(2, 2, 1, 1, 5, 5, 4));
+          ConvLayer::param_tuple(2, 2, 1, 1, 5, 5, 4, ""));
       B{ bottom, bottom_diff } >> *conv_layer;
       conv_layer->top();
       REQUIRE(conv_layer->bottom() == bottom_pack);
@@ -130,7 +129,7 @@ TEST_CASE("Layer", "[Layer][Graph]") {
 
     SECTION("provide top") {
       ConvLayer* conv_layer = g.createGraph<ConvLayer>("conv_layer",
-          ConvLayer::param_tuple(2, 2, 1, 1, 5, 5, 4));
+          ConvLayer::param_tuple(2, 2, 1, 1, 5, 5, 4, ""));
       B{ bottom, bottom_diff } >> *conv_layer >> B{ top, top_diff };
       REQUIRE(conv_layer->bottom() == bottom_pack);
       REQUIRE(conv_layer->top() == top_pack);
@@ -139,7 +138,7 @@ TEST_CASE("Layer", "[Layer][Graph]") {
 
     SECTION("provide weight and top") {
       ConvLayer* conv_layer = g.createGraph<ConvLayer>("conv_layer",
-          ConvLayer::param_tuple(2, 2, 1, 1, 5, 5, 4),
+          ConvLayer::param_tuple(2, 2, 1, 1, 5, 5, 4, ""),
           B{ weight, bias, weight_diff, bias_diff });
       B{ bottom, bottom_diff } >> *conv_layer >> B{ top, top_diff };
       REQUIRE(conv_layer->bottom() == bottom_pack);
@@ -151,14 +150,14 @@ TEST_CASE("Layer", "[Layer][Graph]") {
 
 TEST_CASE("Operator", "[Layer][Graph]") {
   Runnable g;
-  Blob* bottom = g.create({1, 3, 10, 10}, "bottom");
-  Blob* bottom_diff = g.create({1, 3, 10, 10}, "bottom_diff");
+  Blob* bottom = g.create("bottom", {1, 3, 10, 10});
+  Blob* bottom_diff = g.create("bottom_diff", {1, 3, 10, 10});
   B bottom_pack = {bottom, bottom_diff};
   // convolution layer with bottom
   ConvLayer* conv_layer = g.createGraph<ConvLayer>("conv_layer",
-      ConvLayer::param_tuple(2, 2, 1, 1, 5, 5, 4));
+      ConvLayer::param_tuple(2, 2, 1, 1, 5, 5, 4, ""));
   ConvLayer* conv_layer2 = g.createGraph<ConvLayer>("conv_layer2", 1, 1,
-      ConvLayer::param_tuple(2, 2, 1, 1, 5, 5, 4));
+      ConvLayer::param_tuple(2, 2, 1, 1, 5, 5, 4, ""));
   bottom_pack >> *conv_layer >> *conv_layer2;
   conv_layer2->top();
   print_graph(g.print());

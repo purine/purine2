@@ -34,25 +34,25 @@ class DropoutLayer : public Layer {
     } else {
       if (!inplace) {
         top_ = {
-          create(bottom_size, "top"),
-          create(bottom_size, "top_diff")
+          create("top", bottom_size),
+          create("top_diff", bottom_size)
         };
       } else {
         top_ = {
-          create(bottom_[0]->shared_tensor(), "top"),
-          create(bottom_[1]->shared_tensor(), "top_diff")
+          create("top", bottom_[1]->shared_tensor()),
+          create("top_diff", bottom_[1]->shared_tensor())
         };
       }
     }
 
     // create ops
-    Op<Bernoulli>* mask_generator = create<Bernoulli>(make_tuple(1. - ratio),
-        "mask_gen", "main"); // the thread can be other than main
-    Blob* mask = create(bottom_size, "mask");
+    Op<Bernoulli>* mask_generator = create<Bernoulli>("mask_gen", "main",
+        make_tuple(1. - ratio)); // the thread can be other than main
+    Blob* mask = create("mask", bottom_size);
     *mask_generator >> B{ mask };
 
-    Op<Mul>* mul = create<Mul>(tuple<>(), "mul", "main");
-    Op<Mul>* mul_down = create<Mul>(tuple<>(), "mul_down", "main");
+    Op<Mul>* mul = create<Mul>("mul", "main", tuple<>());
+    Op<Mul>* mul_down = create<Mul>("mul_down", "main", tuple<>());
     B{ bottom_[0], mask } >> *mul >> B{ top_[0] };
     B{ top_[1], mask } >> *mul_down >> B{ bottom_[1] };
   }

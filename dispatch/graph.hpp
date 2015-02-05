@@ -62,22 +62,24 @@ class Graph {
 
   // create op
   template <typename O>
-  Op<O>* create(const typename O::param_tuple& param, const string& name,
-      int rank, int device, const string& thread);
+  Op<O>* create(const string& name, int rank, int device, const string& thread,
+      const typename O::param_tuple& param);
   template <typename O>
-  Op<O>* create(const typename O::param_tuple& param,
-      const string& name, const string& thread);
+  Op<O>* create(const string& name, const string& thread,
+      const typename O::param_tuple& param);
 
   template <typename G, typename... Args>
   G* createGraph(const string& name, int rank, int device, const Args&... args);
-
   template <typename G, typename... Args>
   G* createGraph(const string& name, const Args&... args);
 
+  template <typename G, typename... Args>
+  G* createFlexible(const string& name, const Args&... args);
+
   // create blob
-  Blob* create(const Size& size, const string& name, int rank, int device);
-  Blob* create(const Size& size, const string& name);
-  Blob* create(shared_ptr<Tensor> tensor, const string& name);
+  Blob* create(const string& name, int rank, int device, const Size& size);
+  Blob* create(const string& name, const Size& size);
+  Blob* create(const string& name, shared_ptr<Tensor> tensor);
   inline string cached_name() const { return cached_name_; }
 };
 

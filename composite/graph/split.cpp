@@ -22,7 +22,7 @@ void Split::setup() {
   } else {
     top_ = vector<Blob*>(dims.size());
     for (int i = 0; i < top_.size(); ++i) {
-      top_[i] = create({0, 0, 0, 0}, "top");
+      top_[i] = create("top", {0, 0, 0, 0});
     }
   }
   int sum = std::accumulate(dims.begin(), dims.end(), 0);
@@ -54,7 +54,7 @@ void Split::setup() {
     }
   }
   // create op
-  Op<Dummy>* dummy = create<Dummy>(Dummy::param_tuple(), "slice", "main");
+  Op<Dummy>* dummy = create<Dummy>("slice", "main", Dummy::param_tuple());
   bottom_ >> *dummy >> top_;
 }
 

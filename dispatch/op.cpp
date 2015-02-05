@@ -89,8 +89,8 @@ const vector<Blob*>& operator >> (Op_& op, const vector<Blob*>& outputs) {
   return outputs;
 }
 
-Op<Irecv>::Op(const typename Irecv::param_tuple& args,
-    int rank, int device, const string& thread)
+Op<Irecv>::Op(int rank, int device, const string& thread,
+    const typename Irecv::param_tuple& args)
     : Op_(rank, device, thread), args_(args) {
   mpi_test_ = [this] () {
     MPI_Request* request = static_cast<Irecv*>(o_.get())->mpi_request();
@@ -139,8 +139,8 @@ void Op<Irecv>::compute() {
 }
 
 
-Op<Isend>::Op(const typename Isend::param_tuple& args,
-    int rank, int device, const string& thread)
+Op<Isend>::Op(int rank, int device, const string& thread,
+    const typename Isend::param_tuple& args)
     : Op_(rank, device, thread), args_(args) {
   mpi_test_ = [this]() {
     MPI_Request* request = static_cast<Isend*>(o_.get())->mpi_request();
@@ -180,8 +180,8 @@ void Op<Isend>::compute() {
       });
 }
 
-Op<MemCopy>::Op(const typename MemCopy::param_tuple& args, int rank, int device,
-    const string& thread) : Op_(rank, device, thread) {
+Op<MemCopy>::Op(int rank, int device, const string& thread,
+    const typename MemCopy::param_tuple& args) : Op_(rank, device, thread) {
   // rank_ and device_ is reset when setup.
 }
 

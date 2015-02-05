@@ -51,8 +51,8 @@ class Op : public Op_ {
   typename O::param_tuple args_;
   virtual void setup() override;
  public:
-  explicit Op(const typename O::param_tuple& args,
-      int rank, int device, const string& thread);
+  explicit Op(int rank, int device, const string& thread,
+      const typename O::param_tuple& args);
 };
 
 template <>
@@ -63,8 +63,8 @@ class Op<Irecv> : public Op_ {
   // this function tests whether the underlying async mpi operation is done yet
   function<void()> mpi_test_;
  public:
-  explicit Op(const typename Irecv::param_tuple& args,
-      int rank, int device, const string& thread);
+  explicit Op(int rank, int device, const string& thread,
+      const typename Irecv::param_tuple& args);
   virtual void compute() override;
 };
 
@@ -75,8 +75,8 @@ class Op<Isend> : public Op_ {
   virtual void setup() override;
   function<void()> mpi_test_;
  public:
-  explicit Op(const typename Isend::param_tuple& args,
-      int rank, int device, const string& thread);
+  explicit Op(int rank, int device, const string& thread,
+      const typename Isend::param_tuple& args);
   virtual void compute() override;
 };
 
@@ -89,8 +89,8 @@ class Op<MemCopy> : public Op_ {
  protected:
   virtual void setup() override;
  public:
-  explicit Op(const typename MemCopy::param_tuple& args,
-      int rank, int device, const string& thread);
+  explicit Op(int rank, int device, const string& thread,
+      const typename MemCopy::param_tuple& args);
 };
 
 }

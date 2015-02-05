@@ -47,20 +47,20 @@ vector<Node*> Graph::nodes() {
 /**
  * @brief create blob and add the blob to the graph
  */
-Blob* Graph::create(const Size& size, const string& name, int rank,
-    int device) {
-  subgraphs_.push_back(shared_ptr<Graph>(new Blob(size, rank, device)));
+Blob* Graph::create(const string& name, int rank, int device,
+    const Size& size) {
+  subgraphs_.push_back(shared_ptr<Graph>(new Blob(rank, device, size)));
   Graph* g = subgraphs_.rbegin()->get();
   graph_name_[g] = name;
   g->parent_ = this;
   return static_cast<Blob*>(g);
 }
 
-Blob* Graph::create(const Size& size, const string& name) {
-  return create(size, name, rank_, device_);
+Blob* Graph::create(const string& name, const Size& size) {
+  return create(name, rank_, device_, size);
 }
 
-Blob* Graph::create(shared_ptr<Tensor> tensor, const string& name) {
+Blob* Graph::create(const string& name, shared_ptr<Tensor> tensor) {
   subgraphs_.push_back(shared_ptr<Graph>(new Blob(tensor)));
   Graph* g = subgraphs_.rbegin()->get();
   graph_name_[g] = name;

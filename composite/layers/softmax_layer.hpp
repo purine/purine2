@@ -34,22 +34,22 @@ class SoftmaxLayer : public Layer {
     } else {
       if (!inplace) {
         top_ = {
-          create(bottom_size, "top"),
-          create(bottom_size, "top_diff")
+          create("top", bottom_size),
+          create("top_diff", bottom_size)
         };
       } else {
         top_ = {
-          create(bottom_[0]->shared_tensor(), "top"),
-          create(bottom_[1]->shared_tensor(), "top_diff")
+          create("top", bottom_[0]->shared_tensor()),
+          create("top_diff", bottom_[0]->shared_tensor())
         };
       }
     }
 
     // create ops
-    Op<Softmax>* softmax_up = create<Softmax>(make_tuple(mode),
-        "softmax_up", "main");
-    Op<SoftmaxDown>* softmax_down = create<SoftmaxDown>(make_tuple(mode),
-        "softmax_down", "main");
+    Op<Softmax>* softmax_up = create<Softmax>("softmax_up", "main",
+        make_tuple(mode));
+    Op<SoftmaxDown>* softmax_down = create<SoftmaxDown>("softmax_down", "main",
+        make_tuple(mode));
 
     // forward
     B{ bottom_[0] } >> *softmax_up >> B{ top_[0] };

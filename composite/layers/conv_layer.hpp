@@ -49,10 +49,10 @@ class ConvLayer : public Layer {
       CHECK_EQ(weight_[3]->tensor()->size(), expect_bias_size);
     } else { // generate weight
       weight_ = {
-        create(expect_weight_size, "weight"),
-        create(expect_bias_size, "bias"),
-        create(expect_weight_size, "weight_diff"),
-        create(expect_bias_size, "bias_diff")
+        create("weight", expect_weight_size),
+        create("bias", expect_bias_size),
+        create("weight_diff", expect_weight_size),
+        create("bias_diff", expect_bias_size)
       };
     }
 
@@ -64,19 +64,19 @@ class ConvLayer : public Layer {
       }
     } else {
       top_ = {
-        create(expect_top_size, "top"),
-        create(expect_top_size, "top_diff")
+        create("top", expect_top_size),
+        create("top_diff", expect_top_size)
       };
     }
 
     // create ops
     Conv::param_tuple params = make_tuple(pad_h, pad_w, stride_h, stride_w);
-    Op<Conv>* conv_up = create<Conv>(params, "conv_up", "main");
-    Op<ConvDown>* conv_down = create<ConvDown>(params, "conv_down", "main");
-    Op<ConvWeight>* conv_weight = create<ConvWeight>(params,
-        "conv_weight", "main");
-    Op<Bias>* bias_up = create<Bias>(tuple<>(), "bias_up", "main");
-    Op<BiasDown>* bias_down = create<BiasDown>(tuple<>(), "bias_down", "main");
+    Op<Conv>* conv_up = create<Conv>("conv_up", "main", params);
+    Op<ConvDown>* conv_down = create<ConvDown>("conv_down", "main", params);
+    Op<ConvWeight>* conv_weight = create<ConvWeight>("conv_weight", "main",
+        params);
+    Op<Bias>* bias_up = create<Bias>("bias_up", "main", tuple<>());
+    Op<BiasDown>* bias_down = create<BiasDown>("bias_down", "main", tuple<>());
 
     // forward
     B{ bottom_[0], weight_[0] } >> *conv_up >> B{ top_[0] };

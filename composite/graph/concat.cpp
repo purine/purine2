@@ -34,12 +34,12 @@ void Concat::setup() {
     CHECK_EQ(expected_top_size, top_[0]->tensor()->size());
   } else {
     top_ = {
-      create(expected_top_size, "top")
+      create("top", expected_top_size)
     };
   }
   top_[0]->tensor()->mutable_data();
 
-  // create sliced blobs from bottom
+  // create sliced blobs from top
   int off = 0;
   if (dim == Split::DIM::NUM) {
     for (int i = 0; i < bottom_.size(); ++i) {
@@ -55,7 +55,7 @@ void Concat::setup() {
     }
   }
   // create op
-  Op<Dummy>* dummy = create<Dummy>(Dummy::param_tuple(), "concat", "main");
+  Op<Dummy>* dummy = create<Dummy>("concat", "main", Dummy::param_tuple());
   bottom_ >> *dummy >> top_;
 }
 

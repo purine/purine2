@@ -24,7 +24,7 @@ void Copy::setup() {
         device_ == bottom_[0]->device()) {
       top_[0] = bottom_[0];
     } else {
-      top_[0] = create(bottom_[0]->tensor()->size(), "dest", rank_, device_);
+      top_[0] = create("dest", rank_, device_, bottom_[0]->tensor()->size());
     }
   }
   // setup internal routes
@@ -32,31 +32,30 @@ void Copy::setup() {
     return;
   }
   if (bottom_[0]->rank() == top_[0]->rank()) { // on the same machine
-    B{ bottom_[0] } >> *create<MemCopy>(MemCopy::param_tuple(),
-        "memcopy", "main") >> B{ top_[0] };
+    B{ bottom_[0] } >> *create<MemCopy>("memcopy", "main",
+        MemCopy::param_tuple()) >> B{ top_[0] };
   } else { // on different machines
     Blob* src;
     if (bottom_[0]->device() < 0) {
       src = bottom_[0];
     } else {
-      src = create(bottom_[0]->tensor()->size(), "src_cpu",
-          bottom_[0]->rank(), -1);
-      B{ bottom_[0] } >> *create<MemCopy>(MemCopy::param_tuple(),
-          "memcopy", "outbound") >> B{ src };
+      src = create("src_cpu", bottom_[0]->rank(), -1,
+          bottom_[0]->tensor()->size());
+      B{ bottom_[0] } >> *create<MemCopy>("memcopy", "outbound",
+          MemCopy::param_tuple()) >> B{ src };
     }
     Blob* dest;
     if (top_[0]->device() < 0) {
       dest = top_[0];
     } else {
-      dest = create(top_[0]->tensor()->size(), "dest_cpu",
-          top_[0]->rank(), -1);
-      B{ dest } >> *create<MemCopy>(MemCopy::param_tuple(),
-          "memcopy", "inbound") >> B{ top_[0] };
+      dest = create("dest_cpu", top_[0]->rank(), -1, top_[0]->tensor()->size());
+      B{ dest } >> *create<MemCopy>("memcopy", "inbound",
+          MemCopy::param_tuple()) >> B{ top_[0] };
     }
-    B{ src } >> *create<Isend>(Isend::param_tuple(tag, dest->rank()),
-        "isend", src->rank(), src->device(), "main");
-    *create<Irecv>(Irecv::param_tuple(tag++, src->rank()),
-        "irecv", dest->rank(), dest->device(), "main") >> B{ dest };
+    B{ src } >> *create<Isend>("isend", src->rank(), src->device(), "main",
+        Isend::param_tuple(tag, dest->rank()));
+    *create<Irecv>("irecv", dest->rank(), dest->device(), "main",
+        Irecv::param_tuple(tag++, src->rank())) >> B{ dest };
   }
 }
 
@@ -96,8 +95,8 @@ void Distribute::setup() {
           rank_device[i].second == bottom_[0]->device()) {
         top_[i] = bottom_[0];
       } else {
-        top_[i] = create(bottom_[0]->tensor()->size(), "...",
-            rank_device[i].first, rank_device[i].second);
+        top_[i] = create("...", rank_device[i].first, rank_device[i].second,
+            bottom_[0]->tensor()->size());
       }
     }
   }
@@ -113,7 +112,7 @@ void Aggregate::setup() {
     }
   } else {
     top_ = {
-      create(bottom_[0]->tensor()->size(), "top", rank_, device_)
+      create("top", rank_, device_, bottom_[0]->tensor()->size())
     };
   }
 
@@ -123,8 +122,8 @@ void Aggregate::setup() {
   for (int i = 0; i < bottom_.size(); ++i) {
     if (bottom_[i]->rank() != top_[0]->rank() &&
         local_aggs.count(bottom_[i]->rank()) == 0) {
-      local_aggs[bottom_[i]->rank()] = createGraph<Aggregate>("local_agg",
-          bottom_[i]->rank(), -1, Type::SUM);
+      local_aggs[bottom_[i]->rank()] = createFlexible<Aggregate>("local_agg",
+          param_tuple(Type::SUM, bottom_[i]->rank(), -1));
       local_blobs[bottom_[i]->rank()] = { bottom_[i] };
     } else if (bottom_[i]->rank() != top_[0]->rank()) {
       local_blobs[bottom_[i]->rank()].push_back(bottom_[i]);
@@ -143,14 +142,14 @@ void Aggregate::setup() {
       });
   dest_blobs.insert(dest_blobs.end(), agged.begin(), agged.end());
 
-  auto copy = createGraph<Vectorize<Copy> >("...",
-      vector<int>(dest_blobs.size(), top_[0]->rank()),
-      vector<int>(dest_blobs.size(), top_[0]->device()), true);
+  auto copy = createFlexible<Vectorize<Copy> >("...",
+      vector<Copy::param_tuple>(dest_blobs.size(),
+          Copy::param_tuple(top_[0]->rank(), top_[0]->device())));
   vector<vector<Blob*> >{ dest_blobs } >> *copy;
   vector<Blob*> copied = copy->top()[0];
 
-  copied >> *create<Sum>(Sum::param_tuple(), "sum", top_[0]->rank(),
-      top_[0]->device(), "main") >> top_;
+  copied >> *create<Sum>("sum", top_[0]->rank(), top_[0]->device(),
+      "main", Sum::param_tuple()) >> top_;
 }
 
 }

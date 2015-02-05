@@ -49,9 +49,9 @@ class PurineConv : public Runnable {
   PurineConv(int rank, int device, int kernel_size, int num_output, int pad,
       int stride, int group, Size bottom_size) {
     conv = createGraph<ConvLayer>("conv", ConvLayer::param_tuple(pad, pad,
-            stride, stride, kernel_size, kernel_size, num_output));
-    bottom_ = create(bottom_size, "bottom");
-    bottom_diff_ = create(bottom_size, "bottom_diff");
+            stride, stride, kernel_size, kernel_size, num_output, ""));
+    bottom_ = create("bottom", bottom_size);
+    bottom_diff_ = create("bottom_diff", bottom_size);
     B{ bottom_, bottom_diff_ } >> *conv;
     conv->top();
   }
@@ -130,7 +130,7 @@ TEST_CASE("TestConvolution", "[Convolution]") {
   SECTION("GPU") {
     SECTION("Single Group") {
       PurineConv conv(0, 0, 5, 10, 2, 1, 1, {1, 3, 10, 10});
-      *conv.create<Gaussian>(make_tuple(0., 1.), "init", "main")
+      *conv.create<Gaussian>("init", "main", make_tuple(0., 1.))
           >> B{ conv.top_diff(), conv.weight(), conv.bottom(), conv.bias() };
       conv.run();
 
@@ -175,7 +175,7 @@ TEST_CASE("TestConvolution", "[Convolution]") {
 
     SECTION("Multi Group") {
       PurineConv conv(0, 0, 5, 10, 2, 1, 1, {1, 3, 10, 10});
-      *conv.create<Gaussian>(make_tuple(0., 1.), "init", "main")
+      *conv.create<Gaussian>("init", "main", make_tuple(0., 1.))
           >> B{ conv.top_diff(), conv.weight(), conv.bottom(), conv.bias() };
       conv.run();
 
@@ -228,8 +228,8 @@ TEST_CASE("TestInnerProduct", "[InnerProduct]") {
   Runnable test_inner(0, 0);
   InnerProdLayer* inner = test_inner.createGraph<InnerProdLayer>("inner",
       InnerProdLayer::param_tuple(10));
-  Blob* bottom = test_inner.create({1, 3, 10, 10}, "bottom");
-  Blob* bottom_diff = test_inner.create({1, 3, 10, 10}, "bottom_diff");
+  Blob* bottom = test_inner.create("bottom", {1, 3, 10, 10});
+  Blob* bottom_diff = test_inner.create("bottom_diff", {1, 3, 10, 10});
   B{ bottom, bottom_diff } >> *inner;
 
   Blob* top = inner->top()[0];
@@ -239,10 +239,11 @@ TEST_CASE("TestInnerProduct", "[InnerProduct]") {
   Blob* bias = inner->weight()[1];
   Blob* bias_diff = inner->weight()[3];
 
-  *test_inner.create<Gaussian>(make_tuple(0., 1.), "init", "main")
+  *test_inner.create<Gaussian>("init", "main", make_tuple(0., 1.))
       >> B{ top_diff, weight, bottom, bias};
-  Blob* top_cpu = test_inner.create(top->tensor()->size(), "cpu_top", 0, -1);
-  B{ top } >> *test_inner.createGraph<Copy>("...") >> B{ top_cpu };
+  Blob* top_cpu = test_inner.create("cpu_top", 0, -1, top->tensor()->size());
+  B{ top } >> *test_inner.createFlexible<Copy>("...", Copy::param_tuple())
+                  >> B{ top_cpu };
   test_inner.run();
 
   // caffe

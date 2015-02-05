@@ -31,21 +31,20 @@ class Vectorize : public Graph {
   bool transpose_;
   vector<T*> graphs_;
  public:
-  Vectorize(int r, int d, const vector<int>& rank, const vector<int>& device,
+  Vectorize(const vector<int>& rank, const vector<int>& device,
       const vector<typename T::param_tuple>& args, bool transpose = true);
-  Vectorize(int r, int d, const vector<int>& rank,
-      const vector<int>& device, bool transpose = true);
+  Vectorize(const vector<int>& rank, const vector<int>& device,
+      bool transpose = true);
+  Vectorize(const vector<typename T::param_tuple>& args, bool transpose = true);
   virtual ~Vectorize();
   void set_bottom(const vector<vector<Blob*> >& bottom);
   vector<vector<Blob*> > bottom();
   void set_top(const vector<vector<Blob*> >& top);
   vector<vector<Blob*> > top();
-
 };
 
 template <typename T>
-Vectorize<T>::Vectorize(int r, int d,
-    const vector<int>& rank, const vector<int>& device,
+Vectorize<T>::Vectorize(const vector<int>& rank, const vector<int>& device,
     const vector<typename T::param_tuple>& args, bool transpose)
     : transpose_(transpose) {
   CHECK_EQ(args.size(), rank.size());
@@ -53,19 +52,26 @@ Vectorize<T>::Vectorize(int r, int d,
   // create graph
   graphs_ = vector<T*>(args.size());
   for (int i = 0; i < args.size(); ++i) {
-    graphs_[i] = createGraph<T>("...", rank[i], device[i], args[i]);
+    graphs_[i] = createGraph<T>(typeid(T).name(), rank[i], device[i], args[i]);
   }
 }
 
 template <typename T>
-Vectorize<T>::Vectorize(int r, int d,
-    const vector<int>& rank, const vector<int>& device,
-    bool transpose) : rank_(rank), device_(device),
-                             transpose_(transpose) {
+Vectorize<T>::Vectorize(const vector<int>& rank, const vector<int>& device,
+    bool transpose) : rank_(rank), device_(device), transpose_(transpose) {
   CHECK_EQ(device.size(), rank.size());
   graphs_ = vector<T*>(rank.size());
   for (int i = 0; i < rank.size(); ++i) {
     graphs_[i] = createGraph<T>(typeid(T).name(), rank[i], device[i]);
+  }
+}
+
+template <typename T>
+Vectorize<T>::Vectorize(const vector<typename T::param_tuple>& args,
+    bool transpose) : transpose_(transpose) {
+  graphs_ = vector<T*>(args.size());
+  for (int i = 0; i < args.size(); ++i) {
+    graphs_[i] = createFlexible<T>(typeid(T).name(), args[i]);
   }
 }
 

@@ -29,15 +29,15 @@ class SplitLayer : public Layer {
     CHECK(bottom_setup_);
     CHECK_EQ(bottom_.size(), 2);
     Size bottom_size = bottom_[0]->tensor()->size();
-    Split* split = createGraph<Split>("split", dim, dims);
+    Split* split = createGraph<Split>("split", Split::param_tuple(dim), dims);
     bottom_data() >> *split;
     top_.insert(top_.end(), split->top().begin(), split->top().end());
     // concat
     // create top_diff
     for (Blob* top : split->top()) {
-      top_.push_back(create(top->tensor()->size(), "top_diff"));
+      top_.push_back(create("top_diff", top->tensor()->size()));
     }
-    Concat* concat = createGraph<Concat>("concat", dim);
+    Concat* concat = createGraph<Concat>("concat", Concat::param_tuple(dim));
     top_diff() >> *concat >> bottom_diff();
   }
 };

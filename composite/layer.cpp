@@ -85,9 +85,9 @@ Layer& operator >> (const vector<Blob*>& bottom, Layer& layer) {
   // Copyup
   vector<Blob*> bottom_data = first_half<Blob*>(bottom);
   vector<Blob*> bottom_diff = second_half<Blob*>(bottom);
-  auto vec_copy = layer.createGraph<Vectorize<Copy> >("...",
-      vector<int>(bottom_data.size(), layer.rank()),
-      vector<int>(bottom_data.size(), layer.device()), true);
+  auto vec_copy = layer.createFlexible<Vectorize<Copy> >("...",
+      vector<Copy::param_tuple>(bottom_data.size(),
+          Copy::param_tuple(layer.rank(), layer.device())));
   vector<B>{ bottom_data } >> *vec_copy;
   // Copydown
   vector<Blob*> bottom_diff_tmp(bottom_diff.size());
@@ -96,9 +96,10 @@ Layer& operator >> (const vector<Blob*>& bottom, Layer& layer) {
         if (b->rank() == layer.rank() && b->device() == layer.device()) {
           return b;
         } else {
-          Blob* tmp = layer.create(b->tensor()->size(), "...",
-              layer.rank(), layer.device());
-          B{ tmp } >> *layer.createGraph<Copy>("...") >> B{ b };
+          Blob* tmp = layer.create("...", layer.rank(), layer.device(),
+              b->tensor()->size());
+          B{ tmp } >> *layer.createFlexible<Copy>("...", Copy::param_tuple())
+                          >> B{ b };
           return tmp;
         }
       });
@@ -120,16 +121,17 @@ const vector<Blob*>& operator >> (Layer& layer, const vector<Blob*>& top) {
         if (b->rank() == layer.rank() && b->device() == layer.device()) {
           return b;
         } else {
-          Blob* tmp = layer.create(b->tensor()->size(), "...",
-              layer.rank(), layer.device());
-          B{ tmp } >> *layer.createGraph<Copy>("...") >> B{ b };
+          Blob* tmp = layer.create("...", layer.rank(), layer.device(),
+              b->tensor()->size());
+          B{ tmp } >> *layer.createFlexible<Copy>("...", Copy::param_tuple())
+                          >> B{ b };
           return tmp;
         }
       });
   // Copydown
-  Vectorize<Copy>* vec_copy = layer.createGraph<Vectorize<Copy> >("...",
-      vector<int>(top_diff.size(), layer.rank()),
-      vector<int>(top_diff.size(), layer.device()), true);
+  Vectorize<Copy>* vec_copy = layer.createFlexible<Vectorize<Copy> >(
+      "...", vector<Copy::param_tuple>(top_diff.size(),
+          Copy::param_tuple(layer.rank(), layer.device())));
   vector<B>{ top_diff } >> *vec_copy;
   // set top
   vector<Blob*> top_tmp = std::move(top_data_tmp);

@@ -3,12 +3,12 @@
 
 namespace purine {
 
-Tensor::Tensor(const Size& size, const Offset& offset, const Stride& stride,
-    int rank, int device) : size_(size), offset_(offset), stride_(stride),
+Tensor::Tensor(int rank, int device, const Size& size, const Offset& offset,
+    const Stride& stride) : size_(size), offset_(offset), stride_(stride),
                             rank_(rank), device_(device) {
 }
 
-Tensor::Tensor(const Size& size, int rank, int device)
+Tensor::Tensor(int rank, int device, const Size& size)
     : size_(size), rank_(rank), device_(device) {
   offset_ = Offset(0, 0, 0, 0);
   stride_ = Stride(size);

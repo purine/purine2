@@ -13,10 +13,10 @@ class Connectable;
 class Layer;
 
 template <typename O>
-Op<O>* Graph::create(const typename O::param_tuple& param, const string& name,
-    int rank, int device, const string& thread) {
+Op<O>* Graph::create(const string& name, int rank, int device,
+    const string& thread, const typename O::param_tuple& param) {
   subgraphs_.push_back(
-      shared_ptr<Graph>(new Op<O>(param, rank, device, thread)));
+      shared_ptr<Graph>(new Op<O>(rank, device, thread, param)));
   Graph* g = subgraphs_.rbegin()->get();
   graph_name_[g] = name;
   g->parent_ = this;
@@ -24,9 +24,9 @@ Op<O>* Graph::create(const typename O::param_tuple& param, const string& name,
 }
 
 template <typename O>
-Op<O>* Graph::create(const typename O::param_tuple& param,
-    const string& name, const string& thread) {
-  return create<O>(param, name, rank_, device_, thread);
+Op<O>* Graph::create(const string& name, const string& thread,
+    const typename O::param_tuple& param) {
+  return create<O>(name, rank_, device_, thread, param);
 }
 
 template <typename G, typename... Args>
@@ -42,6 +42,15 @@ template <typename G, typename... Args>
 G* Graph::createGraph(const string& name, int rank, int device,
     const Args&... args) {
   subgraphs_.push_back(shared_ptr<Graph>(new G(rank, device, args...)));
+  Graph* g = subgraphs_.rbegin()->get();
+  graph_name_[g] = name;
+  g->parent_ = this;
+  return static_cast<G*>(g);
+}
+
+template <typename G, typename... Args>
+G* Graph::createFlexible(const string& name, const Args&... args) {
+  subgraphs_.push_back(shared_ptr<Graph>(new G(args...)));
   Graph* g = subgraphs_.rbegin()->get();
   graph_name_[g] = name;
   g->parent_ = this;

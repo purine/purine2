@@ -24,10 +24,10 @@ class Split : public Connectable {
   vector<int> dims;
  public:
   typedef tuple<DIM> param_tuple;
-  Split(int rank, int device, DIM d, const vector<int>& ds = {})
-      : Connectable(rank, device), dim(d), dims(ds) {
+  Split(int rank, int device, const param_tuple& args,
+      const vector<int>& ds = {}) : Connectable(rank, device), dims(ds) {
+    std::tie(dim) = args;
   }
-  inline void set_dims(const vector<int> dims) { this->dims = dims; }
   virtual ~Split() override {}
  protected:
   virtual void setup() override;

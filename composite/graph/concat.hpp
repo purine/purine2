@@ -13,6 +13,7 @@ namespace purine {
 
 /**
  * { src1, src2, src3, ... } >> concat >> { dest }
+ * rank and device are not required
  */
 class Concat : public Connectable {
   friend const Concat& operator >> (const vector<Blob*>& inputs,
@@ -21,8 +22,9 @@ class Concat : public Connectable {
   Split::DIM dim;
  public:
   typedef tuple<Split::DIM> param_tuple;
-  Concat(int rank, int device, Split::DIM d)
+  Concat(int rank, int device, const param_tuple& args)
       : Connectable(rank, device) {
+    std::tie(dim) = args;
   }
   virtual ~Concat() override {}
  protected:

@@ -26,8 +26,8 @@ ImageLabel::ImageLabel(const vector<Tensor*>& inputs,
   CHECK_EQ(batch_size, outputs_[1]->size().num());
   CHECK_EQ(crop_size, outputs_[0]->size().height());
   CHECK_EQ(crop_size, outputs_[0]->size().width());
-  mean_.reset(new Tensor({1, color ? 3 : 1, crop_size, crop_size},
-          current_rank(), -1));
+  mean_.reset(new Tensor(current_rank(), -1,
+          {1, color ? 3 : 1, crop_size, crop_size}));
   if (!(mean == "")) {
     BlobProto blob_proto;
     ReadProtoFromBinaryFileOrDie(mean, &blob_proto);

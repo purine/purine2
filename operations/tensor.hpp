@@ -13,9 +13,9 @@ namespace purine {
 
 class Tensor {
  public:
-  explicit Tensor(const Size& size, const Offset& offset, const Stride& stride,
-      int rank, int device);
-  explicit Tensor(const Size& size, int rank, int device);
+  explicit Tensor(int rank, int device, const Size& size,
+      const Offset& offset, const Stride& stride);
+  explicit Tensor(int rank, int device, const Size& size);
   virtual ~Tensor();
 
   inline const Size& size() const { return size_; }
