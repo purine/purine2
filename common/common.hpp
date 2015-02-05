@@ -92,6 +92,28 @@ vector<T> second_half(const vector<T>& vec) {
   return ret;
 }
 
+template <typename T>
+vector<T> odd(const vector<T>& vec) {
+  CHECK_EQ(vec.size() % 2, 0);
+  int half = vec.size() / 2;
+  vector<T> odd_(half);
+  for (int i = 0; i < half; ++i) {
+    odd_[i] = vec[2 * i];
+  }
+  return odd_;
+}
+
+template <typename T>
+vector<T> even(const vector<T>& vec) {
+  CHECK_EQ(vec.size() % 2, 0);
+  int half = vec.size() / 2;
+  vector<T> even_(half);
+  for (int i = 0; i < half; ++i) {
+    even_[i] = vec[2 * i + 1];
+  }
+  return even_;
+}
+
 /**
  * @fn int current_rank()
  * @brief returns rank of current machine
