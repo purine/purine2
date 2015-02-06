@@ -1,10 +1,13 @@
 // Copyright Lin Min 2015
 #include <deque>
+#include <set>
 #include <iterator>
 #include <stack>
 #include <string>
 #include "dispatch/runnable.hpp"
+#include "dispatch/blob.hpp"
 
+using std::set;
 using std::deque;
 using std::stack;
 using std::to_string;
@@ -56,29 +59,48 @@ vector<vector<string> > Runnable::print() {
   prepare_once();
   stack<vector<Node*> > stk;
   vector<vector<string> > ret;
+  set<Node*> visited;
   for (Node* node : sources()) {
     stk.push({ node });
+    visited.insert(node);
   }
   while (stk.empty() == false) {
     vector<Node*> tmp = std::move(stk.top());
     stk.pop();
     Node* end = *tmp.rbegin();
-    if (end->outputs().size() == 0) {
+    const vector<Node*>& outputs = end->outputs();
+    if (all_of(outputs.begin(), outputs.end(), [&](Node* n)->bool {
+              return visited.find(n) != visited.end();
+            })) {
       vector<string> tmp_name(tmp.size());
       transform(tmp.begin(), tmp.end(), tmp_name.begin(),
           [] (Node* n)->string {
-            return n->cached_name()
+            string ret = "\033[";
+            if (dynamic_cast<Blob*>(n) == NULL) {
+              // op
+              ret += "1;31m";
+            } else {
+              ret += "1;36m";
+            }
+            return ret + n->cached_name()
                 + "[" + to_string(n->rank()) + "]["
                 + (n->device() < 0 ? "CPU" : string("GPU")
-                    + to_string(n->device())) + "]";
+                    + to_string(n->device())) + "]\033[0m";
           });
       ret.push_back(tmp_name);
     } else {
-      tmp.push_back(end->outputs()[0]);
-      for (int i = 1; i < end->outputs().size(); ++i) {
-        stk.push({ end, end->outputs()[i] });
+      for (int i = 0; i < end->outputs().size(); ++i) {
+        if (visited.find(end->outputs()[i]) == visited.end()) {
+          if (tmp.size() != 0) {
+            tmp.push_back(end->outputs()[i]);
+            stk.push(tmp);
+            tmp.clear();
+          } else {
+            stk.push({ end, end->outputs()[i] });
+          }
+          visited.insert(end->outputs()[i]);
+        }
       }
-      stk.push(tmp);
     }
   }
   return ret;

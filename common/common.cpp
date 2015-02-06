@@ -73,7 +73,7 @@ void print_graph(const vector<vector<string> >& print_out) {
       if (it == ss.begin()) {
         cout << *it;
       } else {
-        cout << "  >>  " << *it;
+        cout << "\033[1;37m --> \033[0m" << *it;
       }
       if (it == ss.end() - 1) {
         cout << endl;
