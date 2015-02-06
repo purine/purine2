@@ -6,6 +6,7 @@
 #include "operations/include/conv.hpp"
 #include "operations/include/bias.hpp"
 #include "operations/include/activation.hpp"
+#include "composite/layers/activation_layer.hpp"
 
 namespace purine {
 
@@ -18,13 +19,14 @@ class ConvLayer : public Layer {
   int kernel_h;
   int kernel_w;
   int num_output;
+  string activation;
  public:
   typedef vector<Blob*> B;
-  typedef tuple<int, int, int, int, int, int, int> param_tuple;
+  typedef tuple<int, int, int, int, int, int, int, string> param_tuple;
   ConvLayer(int rank, int device, const param_tuple& args,
       const vector<Blob*>& weight = {}) : Layer(rank, device, weight) {
     std::tie(pad_h, pad_w, stride_h, stride_w, kernel_h,
-        kernel_w, num_output) = args;
+        kernel_w, num_output, activation) = args;
   }
   virtual ~ConvLayer() override {}
 
@@ -78,13 +80,30 @@ class ConvLayer : public Layer {
     Op<Bias>* bias_up = create<Bias>("bias_up", "main", tuple<>());
     Op<BiasDown>* bias_down = create<BiasDown>("bias_down", "main", tuple<>());
 
-    // forward
-    B{ bottom_[0], weight_[0] } >> *conv_up >> B{ top_[0] };
-    B{ weight_[1] } >> *bias_up >> B{ top_[0] };
-    // backward
-    B{ top_[1], weight_[0] } >> *conv_down >> B{ bottom_[1] };
-    B{ top_[1], bottom_[0] } >> *conv_weight >> B{ weight_[2] };
-    B{ top_[1] } >> *bias_down >> B{ weight_[3] };
+    if (activation == "") {
+      // forward
+      B{ bottom_[0], weight_[0] } >> *conv_up >> B{ top_[0] };
+      B{ weight_[1] } >> *bias_up >> B{ top_[0] };
+      // backward
+      B{ top_[1], weight_[0] } >> *conv_down >> B{ bottom_[1] };
+      B{ top_[1], bottom_[0] } >> *conv_weight >> B{ weight_[2] };
+      B{ top_[1] } >> *bias_down >> B{ weight_[3] };
+    } else {
+      // inplace
+      Blob* tmp_data = create("...", top_[0]->shared_tensor());
+      Blob* tmp_diff = create("...", top_[1]->shared_tensor());
+      B{ bottom_[0], weight_[0] } >> *conv_up >> B{ tmp_data };
+      B{ weight_[1] } >> *bias_up >> B{ tmp_data };
+      // backward
+      B{ tmp_diff, weight_[0] } >> *conv_down >> B{ bottom_[1] };
+      B{ tmp_diff, bottom_[0] } >> *conv_weight >> B{ weight_[2] };
+      B{ tmp_diff } >> *bias_down >> B{ weight_[3] };
+      ActivationLayer* act = createGraph<ActivationLayer>("act",
+          ActivationLayer::param_tuple(activation, true));
+      B{ tmp_data, tmp_diff } >> *act >> top_;
+    }
+
+
   }
 };
 
