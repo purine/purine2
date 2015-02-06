@@ -132,4 +132,23 @@ void Average::compute_gpu(const vector<bool>& add) {
       outputs_[0]->mutable_gpu_data());
 }
 
+Scale::Scale(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
+    const param_tuple& args) : Operation(inputs, outputs) {
+  std::tie(scale) = args;
+  CHECK_EQ(inputs_.size(), 1);
+  CHECK_EQ(inputs_[0]->size(), outputs_[0]->size());
+}
+
+void Scale::compute_cpu(const vector<bool>& add) {
+  caffe::caffe_cpu_axpby<DTYPE>(inputs_[0]->size().count(), scale,
+      inputs_[0]->cpu_data(), add[0] ? 1. : 0.,
+      outputs_[0]->mutable_cpu_data());
+}
+
+void Scale::compute_gpu(const vector<bool>& add) {
+  caffe::caffe_gpu_axpby<DTYPE>(inputs_[0]->size().count(), scale,
+      inputs_[0]->gpu_data(), add[0] ? 1. : 0.,
+      outputs_[0]->mutable_gpu_data());
+}
+
 }

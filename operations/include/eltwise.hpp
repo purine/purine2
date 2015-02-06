@@ -56,6 +56,17 @@ class Average : public Operation {
   virtual void compute_gpu(const vector<bool>& add);
 };
 
+class Scale : public Operation {
+ protected:
+  DTYPE scale;
+ public:
+  typedef tuple<DTYPE> param_tuple;
+  explicit Scale(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
+      const param_tuple& args);
+  virtual void compute_cpu(const vector<bool>& add);
+  virtual void compute_gpu(const vector<bool>& add);
+};
+
 }
 
 #endif
