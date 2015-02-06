@@ -30,6 +30,9 @@ set(BLAS_LIBRARIES ${Atlas_LIBRARIES})
 find_package(LibUV REQUIRED)
 include_directories(${LIBUV_INCLUDE_DIRS})
 
+find_package(LMDB REQUIRED)
+include_directories(${LMDB_INCLUDE_DIR})
+
 find_package(MPI)
 include_directories(${MPI_INCLUDE_PATH})
 
@@ -58,8 +61,10 @@ file(GLOB_RECURSE PURINE_CU_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cu)
 cuda_add_library(purine_cu STATIC ${PURINE_CU_SOURCES})
 
 file(GLOB_RECURSE PURINE_CPP_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
-file(GLOB_RECURSE TEST_CPP_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} test_*.cpp)
+file(GLOB_RECURSE TEST_CPP_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tests/test_*.cpp)
+file(GLOB_RECURSE EXAMPLE_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} examples/*.cpp)
 list(REMOVE_ITEM PURINE_CPP_SOURCES ${TEST_CPP_SOURCES})
+list(REMOVE_ITEM PURINE_CPP_SOURCES ${EXAMPLE_SOURCES})
 
 add_library(purine STATIC ${PURINE_CPP_SOURCES})
 target_link_libraries(purine purine_cu
@@ -67,7 +72,9 @@ target_link_libraries(purine purine_cu
   ${CUDA_curand_LIBRARY}
   ${BLAS_LIBRARIES}
   ${MPI_C_LIBRARIES}
+  ${LMDB_LIBRARIES}
   /usr/local/lib/libcudnn.so
   )
 CUDA_ADD_CUBLAS_TO_TARGET(purine)
 add_subdirectory(tests)
+add_subdirectory(examples)
