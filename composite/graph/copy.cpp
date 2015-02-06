@@ -6,6 +6,7 @@
 #include "dispatch/op_template.hpp"
 #include "composite/graph/copy.hpp"
 #include "composite/vectorize.hpp"
+#include "operations/include/dummy.hpp"
 
 namespace purine {
 typedef vector<Blob*> B;
@@ -108,6 +109,49 @@ void Distribute::setup() {
       }
     }
   }
+  map<int, vector<Blob*> > blobs;
+  map<int, Blob*> routes;
+  for (Blob* b : top_) {
+    // if top is on the same machine as bottom
+    if (b->rank() == bottom_[0]->rank()) {
+      if (b != bottom_[0]) {
+        bottom_ >> *createFlexible<Copy>("...", Copy::param_tuple())
+        >> vector<Blob*>{ b };
+      }
+      continue;
+    }
+    // not on the same machine
+    if (blobs.count(b->rank()) == 1) {
+      blobs[b->rank()].push_back(b);
+    } else {
+      blobs[b->rank()] = { b };
+    }
+    // if top is on CPU, it can be the route
+    if (b->device() < 0 && routes.count(b->rank()) == 0) {
+      routes[b->rank()] = create("route", b->shared_tensor());
+      bottom_ >> *createFlexible<Copy>("...", Copy::param_tuple())
+      >> vector<Blob*>{ routes[b->rank()] };
+    }
+  }
+  for (auto kv : blobs) {
+    if (routes.count(kv.first) == 0) {
+      routes[kv.first] = create("route", kv.first, -1,
+          bottom_[0]->tensor()->size());
+      bottom_ >> *createFlexible<Copy>("...", Copy::param_tuple())
+      >> vector<Blob*>{ routes[kv.first] };
+    }
+    Blob* route = routes[kv.first];
+    for (Blob* top : kv.second) {
+      if (route->tensor() == top->tensor()) {
+        vector<Blob*>{ route } >> *create<Dummy>("...", route->rank(),
+            route->device(), "main", Dummy::param_tuple())
+                                      >> vector<Blob*>{ top };
+      } else {
+        vector<Blob*>{ route } >> *createFlexible<Copy>("...",
+            Copy::param_tuple()) >> vector<Blob*>{ top };
+      }
+    }
+  }
 }
 
 void Aggregate::setup() {
@@ -156,8 +200,17 @@ void Aggregate::setup() {
   vector<vector<Blob*> >{ dest_blobs } >> *copy;
   vector<Blob*> copied = copy->top()[0];
 
-  copied >> *create<Sum>("sum", top_[0]->rank(), top_[0]->device(),
-      "main", Sum::param_tuple()) >> top_;
+  if (agg_type_ == Aggregate::SUM) {
+    copied >> *create<Sum>("sum", top_[0]->rank(), top_[0]->device(),
+        "main", Sum::param_tuple()) >> top_;
+  } else {
+    DTYPE scale = 1. / DTYPE(bottom_.size());
+    Blob* sum = create("summed", top_[0]->shared_tensor());
+    copied >> *create<Sum>("sum", top_[0]->rank(), top_[0]->device(),
+        "main", Sum::param_tuple()) >> vector<Blob*>{ sum } >>
+        *create<Scale>("scale", top_[0]->rank(), top_[0]->device(), "main",
+            Scale::param_tuple(scale)) >> top_;
+  }
 }
 
 }
