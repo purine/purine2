@@ -52,11 +52,13 @@ FetchImage::FetchImage(const string& source, const string& mean, bool mirror,
 
     // copy splitted images to the destination
     vector<vector<Blob*> >{ split_image->top() }
-    >> *createFlexible<Vectorize<Copy> >("...", vector<Copy::param_tuple>())
+    >> *createFlexible<Vectorize<Copy> >("...",
+        vector<Copy::param_tuple>(kv.second.size()))
            >> vector<vector<Blob*> >{ kv.second };
 
     vector<vector<Blob*> >{ split_label->top() }
-    >> *createFlexible<Vectorize<Copy> >("...", vector<Copy::param_tuple>())
+    >> *createFlexible<Vectorize<Copy> >("...",
+        vector<Copy::param_tuple>(kv.second.size()))
            >> vector<vector<Blob*> >{ labels[kv.first] };
 
     offset += size;

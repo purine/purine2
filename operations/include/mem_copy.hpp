@@ -1,6 +1,6 @@
 // Copyright Lin Min 2015
-#ifndef PURINE_COPY
-#define PURINE_COPY
+#ifndef PURINE_MEM_COPY
+#define PURINE_MEM_COPY
 
 #include "operations/operation.hpp"
 

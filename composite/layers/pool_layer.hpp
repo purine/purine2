@@ -28,9 +28,9 @@ class PoolLayer : public Layer {
     CHECK_EQ(bottom_.size(), 2);
     Size bottom_size = bottom_[0]->tensor()->size();
     int out_h = static_cast<int>(ceil(static_cast<float>(bottom_size.height()
-                - kernel_h) / stride_h)) + 1;
+                + 2 * pad_h - kernel_h) / stride_h)) + 1;
     int out_w = static_cast<int>(ceil(static_cast<float>(bottom_size.width()
-                - kernel_w) / stride_w)) + 1;
+                + 2 * pad_w - kernel_w) / stride_w)) + 1;
     Size expect_top_size = { bottom_size.num(), bottom_size.channels(),
                              out_h, out_w };
 

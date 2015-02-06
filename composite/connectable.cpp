@@ -65,16 +65,11 @@ vector<Blob*> Connectable::top(int index) {
 // Except Copy which is also a Connectable. But the operators are overrided.
 
 Connectable& operator >> (const vector<Blob*>& bottom, Connectable& g) {
-  (vector<B>{ bottom } >> *g.createFlexible<Vectorize<Copy> >("...",
-      vector<Copy::param_tuple>(bottom.size(),
-          Copy::param_tuple(g.rank(), g.device())))).top()[0] >> g;
-  // CHECK that inputs are on the same location as g
-  if (!g.FLEXIBLE()) {
-    for (Blob* b : bottom) {
-      CHECK_EQ(b->rank(), g.rank());
-      CHECK_EQ(b->device(), g.device());
-    }
-  }
+  vector<Blob*> b = (vector<B>{ bottom } >>
+      *g.createFlexible<Vectorize<Copy> >("...",
+          vector<Copy::param_tuple>(bottom.size(),
+              Copy::param_tuple(g.rank(), g.device())))).top()[0];
+  g.set_bottom(b);
   return g;
 }
 
@@ -93,13 +88,6 @@ const vector<Blob*>& operator >> (Connectable& g, const vector<Blob*>& top) {
         }
       });
   g.set_top(top_tmp);
-  // CHECK top are on the same location as g
-  if (!g.FLEXIBLE()) {
-    for (Blob* t : top) {
-      CHECK_EQ(t->rank(), g.rank());
-      CHECK_EQ(t->device(), g.device());
-    }
-  }
   return top;
 }
 

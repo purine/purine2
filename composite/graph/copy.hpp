@@ -1,4 +1,8 @@
 // Copyright Lin Min 2015
+
+#ifndef PURINE_COPY
+#define PURINE_COPY
+
 #include <utility>
 #include "dispatch/graph_template.hpp"
 #include "composite/connectable.hpp"
@@ -74,3 +78,5 @@ class Aggregate : public Connectable {
 };
 
 }
+
+#endif

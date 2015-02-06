@@ -24,7 +24,6 @@ class Activation : public Operation {
       const vector<Tensor*>& outputs, const param_tuple& args);
   virtual ~Activation();
   virtual void compute_gpu(const vector<bool>& add);
-  virtual void compute_cpu(const vector<bool>& add);
 };
 
 /**
@@ -41,7 +40,6 @@ class ActivationDown : public Operation {
       const vector<Tensor*>& outputs, const param_tuple& args);
   virtual ~ActivationDown();
   virtual void compute_gpu(const vector<bool>& add);
-  virtual void compute_cpu(const vector<bool>& add);
 };
 
 }

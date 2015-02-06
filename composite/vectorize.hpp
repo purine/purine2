@@ -1,17 +1,11 @@
 // Copyright Lin Min 2015
+
+#ifndef PURINE_VECTORIZE
+#define PURINE_VECTORIZE
+
 #include "dispatch/graph.hpp"
 
 namespace purine {
-
-static vector<vector<Blob*> > transpose(const vector<vector<Blob*> >& data) {
-  vector<vector<Blob*> > result(data[0].size(), vector<Blob*>(data.size()));
-  for (int i = 0; i < data[0].size(); i++) {
-    for (int j = 0; j < data.size(); j++) {
-      result[i][j] = data[j][i];
-    }
-  }
-  return result;
-}
 
 template <typename T>
 class Vectorize : public Graph {
@@ -90,7 +84,7 @@ void Vectorize<T>::set_bottom(const vector<vector<Blob*> >& bottom) {
 
   vector<vector<Blob*> > bottom_;
   if (this->transpose_) {
-    bottom_ = transpose(bottom);
+    bottom_ = transpose<Blob*>(bottom);
   }
   // create graph
   CHECK_EQ(bottom_.size(), graphs_.size());
@@ -107,7 +101,7 @@ vector<vector<Blob*> > Vectorize<T>::bottom() {
         return g->bottom();
       });
   if (this->transpose_) {
-    return transpose(tmp);
+    return transpose<Blob*>(tmp);
   } else {
     return tmp;
   }
@@ -117,7 +111,7 @@ template <typename T>
 void Vectorize<T>::set_top(const vector<vector<Blob*> >& top) {
   vector<vector<Blob*> > top_;
   if (this->transpose_) {
-    top_ = transpose(top);
+    top_ = transpose<Blob*>(top);
   }
   CHECK_EQ(top_.size(), graphs_.size());
   for (int i = 0; i < top_.size(); ++i) {
@@ -129,11 +123,11 @@ template <typename T>
 vector<vector<Blob*> > Vectorize<T>::top() {
   vector<vector<Blob*> > tmp(graphs_.size());
   transform(graphs_.begin(), graphs_.end(), tmp.begin(),
-      [](Connectable* g)->vector<Blob*>{
+      [](T* g)->vector<Blob*>{
         return g->top();
       });
   if (this->transpose_) {
-    tmp = transpose(tmp);
+    tmp = transpose<Blob*>(tmp);
   }
   return tmp;
 }
@@ -142,17 +136,22 @@ template <typename X>
 Vectorize<X>& operator >> (const vector<vector<Blob*> >& bottom,
     Vectorize<X>& v) {
   v.set_bottom(bottom);
+  return v;
 }
 
 template <typename X>
 const vector<vector<Blob*> >& operator >> (Vectorize<X>& v,
     const vector<vector<Blob*> >& top) {
   v.set_top(top);
+  return top;
 }
 
 template <typename X, typename Y>
 Vectorize<Y>& operator >> (Vectorize<X>& v1, Vectorize<Y>& v2) {
   v1.top() >> v2;
+  return v2;
 }
 
 }
+
+#endif

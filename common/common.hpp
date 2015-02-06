@@ -114,6 +114,17 @@ vector<T> even(const vector<T>& vec) {
   return even_;
 }
 
+template <typename T>
+vector<vector<T> > transpose(const vector<vector<T> >& data) {
+  vector<vector<T> > result(data[0].size(), vector<T>(data.size()));
+  for (int i = 0; i < data[0].size(); i++) {
+    for (int j = 0; j < data.size(); j++) {
+      result[i][j] = data[j][i];
+    }
+  }
+  return result;
+}
+
 /**
  * @fn int current_rank()
  * @brief returns rank of current machine

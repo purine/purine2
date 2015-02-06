@@ -42,3 +42,5 @@ class ConcatLayer : public Layer {
 };
 
 }
+
+#endif

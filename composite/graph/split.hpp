@@ -11,7 +11,7 @@ using std::pair;
 namespace purine {
 
 /**
- * { src } >> slice >> { dest1, dest2, dest3, ... }
+ * { src } >> split >> { dest1, dest2, dest3, ... }
  */
 class Split : public Connectable {
  public:

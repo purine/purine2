@@ -4,6 +4,7 @@
 
 #include "composite/layer.hpp"
 #include "operations/include/eltwise.hpp"
+#include "operations/include/random.hpp"
 
 namespace purine {
 
@@ -12,7 +13,7 @@ class DropoutLayer : public Layer {
   DTYPE ratio;
   bool inplace;
  public:
-  typedef tuple<DTYPE> param_tuple;
+  typedef tuple<DTYPE, bool> param_tuple;
   DropoutLayer(int rank, int device, const param_tuple& args)
       : Layer(rank, device) {
     std::tie(ratio, inplace) = args;
@@ -59,3 +60,5 @@ class DropoutLayer : public Layer {
 };
 
 }
+
+#endif

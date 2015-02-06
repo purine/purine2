@@ -32,7 +32,15 @@ void Copy::setup() {
     return;
   }
   if (bottom_[0]->rank() == top_[0]->rank()) { // on the same machine
-    B{ bottom_[0] } >> *create<MemCopy>("memcopy", "main",
+    string thread;
+    if (bottom_[0]->device() >= 0) {
+      thread = "outbound";
+    } else if (top_[0]->device() >= 0) {
+      thread = "inbound";
+    } else {
+      thread = "main";
+    }
+    B{ bottom_[0] } >> *create<MemCopy>("memcopy", thread,
         MemCopy::param_tuple()) >> B{ top_[0] };
   } else { // on different machines
     Blob* src;

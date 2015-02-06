@@ -43,3 +43,5 @@ class SplitLayer : public Layer {
 };
 
 }
+
+#endif

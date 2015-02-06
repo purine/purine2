@@ -22,7 +22,7 @@ void MemCopy::compute_cpu(const vector<bool>& add) {
 void MemCopy::compute_gpu(const vector<bool>& add) {
   if (inputs_[0]->device() >= 0 && outputs_[0]->device() >=0 &&
       inputs_[0]->device() == outputs_[0]->device() &&
-      inputs_[0]->gpu_data() == outputs_[0]->gpu_data()) {
+      inputs_[0]->gpu_data() == outputs_[0]->mutable_gpu_data()) {
     return;
   }
   const DTYPE* src = inputs_[0]->device() < 0 ? inputs_[0]->cpu_data()

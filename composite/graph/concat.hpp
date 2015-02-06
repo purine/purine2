@@ -16,8 +16,6 @@ namespace purine {
  * rank and device are not required
  */
 class Concat : public Connectable {
-  friend const Concat& operator >> (const vector<Blob*>& inputs,
-      Concat& concat);
  protected:
   Split::DIM dim;
  public:
