@@ -102,7 +102,9 @@ SoftmaxLoss::SoftmaxLoss(const vector<Tensor*>& inputs,
     const vector<Tensor*>& outputs, const param_tuple& args)
     : Operation(inputs, outputs) {
   CHECK_EQ(outputs_[0]->size(), Size(1, 1, 1, 1));
-  CHECK_EQ(inputs_[1]->size(), inputs_[0]->size());
+  CHECK_EQ(inputs_[1]->size().num(), inputs_[0]->size().num());
+  CHECK_EQ(inputs_[1]->size().height(), inputs_[0]->size().height());
+  CHECK_EQ(inputs_[1]->size().width(), inputs_[0]->size().width());
 }
 
 void SoftmaxLoss::compute_cpu(const vector<bool>& add) {
