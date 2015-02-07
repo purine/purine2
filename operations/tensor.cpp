@@ -26,10 +26,7 @@ int Tensor::offset(const Offset& off, const Stride& stride) {
 }
 
 void Tensor::alloc_mem(DTYPE** data, const Size& size, int rank, int device) {
-  if (size.count() == 0) {
-    *data = 0;
-    return;
-  }
+  CHECK_GT(size.count(), 0);
   CHECK_EQ(current_rank(), rank) << "Can't allocate memory on another machine";
   if (device < 0) {
     cudaHostAlloc(data, sizeof(DTYPE) * size.count(), cudaHostAllocPortable);
