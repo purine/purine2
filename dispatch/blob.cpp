@@ -61,4 +61,10 @@ void Blob::compute() {
   }
 }
 
+void Blob::share_from(Blob* other) {
+  CHECK_EQ(other->rank_, rank_);
+  CHECK_EQ(other->device_, device_);
+  tensor_ = other->tensor_;
+}
+
 }

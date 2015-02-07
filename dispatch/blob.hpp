@@ -27,9 +27,12 @@ class Blob : public Node {
   virtual ~Blob() override;
 
   inline cudaEvent_t cuda_event() { return cuda_event_; }
-  inline Tensor* tensor() { return tensor_.get(); }
+  inline Tensor* tensor() {
+    CHECK(tensor_);
+    return tensor_.get();
+  }
   inline shared_ptr<Tensor> shared_tensor() { return tensor_; }
-
+  void share_from(Blob* other);
   virtual void compute() override;
 };
 
