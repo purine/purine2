@@ -200,16 +200,28 @@ void Aggregate::setup() {
   vector<vector<Blob*> >{ dest_blobs } >> *copy;
   vector<Blob*> copied = copy->top()[0];
 
-  if (agg_type_ == Aggregate::SUM) {
-    copied >> *create<Sum>("sum", top_[0]->rank(), top_[0]->device(),
-        "main", Sum::param_tuple()) >> top_;
+  if (agg_type_ == Aggregate::SUM || bottom_.size() == 1) {
+    if (copied.size() > 1){
+      copied >> *create<Sum>("sum", top_[0]->rank(), top_[0]->device(),
+          "main", Sum::param_tuple()) >> top_;
+    } else {
+      top_[0]->share_from(copied[0]);
+      copied >> *create<Dummy>("dummy_sum", "main",
+          Dummy::param_tuple()) >> top_;
+    }
   } else {
     DTYPE scale = 1. / DTYPE(bottom_.size());
-    Blob* sum = create("summed", top_[0]->shared_tensor());
-    copied >> *create<Sum>("sum", top_[0]->rank(), top_[0]->device(),
-        "main", Sum::param_tuple()) >> vector<Blob*>{ sum } >>
-        *create<Scale>("scale", top_[0]->rank(), top_[0]->device(), "main",
-            Scale::param_tuple(scale)) >> top_;
+    if (copied.size() > 1) {
+      Blob* sum = create("summed", top_[0]->shared_tensor());
+      copied >> *create<Sum>("sum", top_[0]->rank(), top_[0]->device(),
+          "main", Sum::param_tuple()) >> vector<Blob*>{ sum } >>
+          *create<Scale>("scale", top_[0]->rank(), top_[0]->device(), "main",
+              Scale::param_tuple(scale)) >> top_;
+    } else {
+      top_[0]->share_from(copied[0]);
+      copied >> *create<Scale>("scale", top_[0]->rank(), top_[0]->device(),
+          "main", Scale::param_tuple(scale)) >> top_;
+    }
   }
 }
 
