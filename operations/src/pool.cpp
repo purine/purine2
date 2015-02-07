@@ -30,7 +30,9 @@ Pool::Pool(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
   if (method == "max") {
     mode = CUDNN_POOLING_MAX;
   } else if (method == "average") {
-    mode = CUDNN_POOLING_AVERAGE;
+    mode = CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING;
+  } else if (method == "average_exclude_padding") {
+    mode = CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
   } else {
     LOG(FATAL) << "unknown pooling method: " << method;
   }
@@ -78,7 +80,9 @@ PoolDown::PoolDown(const vector<Tensor*>& inputs,
   if (method == "max") {
     mode = CUDNN_POOLING_MAX;
   } else if (method == "average") {
-    mode = CUDNN_POOLING_AVERAGE;
+    mode = CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING;
+  } else if (method == "average_exclude_padding") {
+    mode = CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
   } else {
     LOG(FATAL) << "unknown pooling method: " << method;
   }
