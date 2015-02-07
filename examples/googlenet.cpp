@@ -120,7 +120,8 @@ int main(int argc, char** argv) {
   // parameter server
   pair<int, int> param_server = {0, -1};
   // fetch image
-  FetchImage fetch(source, mean_file, true, true, true, 128, 224, parallels);
+  FetchImage fetch(source, mean_file, true, true, true, batch_size, 224,
+      parallels);
   fetch.run();
   // create data parallelism of GoogLeNet;
   DataParallel<GoogLeNet> parallel_googlenet(parallels, param_server);

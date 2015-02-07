@@ -7,6 +7,8 @@
 
 namespace purine {
 
+typedef vector<Blob*> B;
+
 class PoolLayer : public Layer {
  protected:
   string method;

@@ -50,7 +50,7 @@ Conv::~Conv() {
 }
 
 void Conv::compute_gpu(const vector<bool>& add) {
-  if (!workspace_) {
+  if (!workspace_ && workspace_size_ != 0) {
     int device;
     CUDA_CHECK(cudaGetDevice(&device));
     workspace_.reset(new Tensor(current_rank(), device,
@@ -60,8 +60,8 @@ void Conv::compute_gpu(const vector<bool>& add) {
   DTYPE beta = add[0] ? 1. : 0.;
   CUDNN_CHECK(cudnnConvolutionForward(cudnn_handle(), &alpha, bottom_desc_,
           inputs_[0]->gpu_data(), filter_desc_, inputs_[1]->gpu_data(),
-          conv_desc_, algo_, workspace_->mutable_gpu_data(), workspace_size_,
-          &beta, top_desc_, outputs_[0]->mutable_gpu_data()));
+          conv_desc_, algo_, workspace_ ? workspace_->mutable_gpu_data() : 0,
+          workspace_size_, &beta, top_desc_, outputs_[0]->mutable_gpu_data()));
 }
 
 ConvDown::ConvDown(const vector<Tensor*>& inputs,

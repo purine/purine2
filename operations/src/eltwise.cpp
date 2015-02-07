@@ -75,7 +75,7 @@ WeightedSum::WeightedSum(const vector<Tensor*>& inputs,
   for (Tensor* input : inputs_) {
     CHECK_EQ(input->size(), outputs_[0]->size());
   }
-  CHECK_EQ(outputs_.size(), weights.size());
+  CHECK_EQ(inputs_.size(), weights.size());
 }
 
 void WeightedSum::compute_cpu(const vector<bool>& add) {
