@@ -52,7 +52,13 @@ void Op_::compute() {
             }
             CUDA_CHECK(cudaStreamWaitEvent(stream(), b->cuda_event(), 0));
           }
+#ifndef NDEBUG
+          LOG(INFO) << "start " << cached_name_;
+#endif
           o_->compute_gpu(add);
+#ifndef NDEBUG
+          CUDA_CHECK(cudaStreamSynchronize(stream()));
+#endif
         }
         for (Node* output : outputs_) {
           output->inc_in();
