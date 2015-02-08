@@ -68,4 +68,36 @@ Blob* Graph::create(const string& name, shared_ptr<Tensor> tensor) {
   return static_cast<Blob*>(g);
 }
 
+DTYPE Graph::memory_cost_cpu() {
+  DTYPE ret = 0;
+  for (auto graph : subgraphs_) {
+    if (graph->subgraphs_.empty()) {
+      Blob* blob = dynamic_cast<Blob*>(graph.get());
+      if (blob && blob->device() < 0) {
+        ret += (blob->tensor()->size().count() *
+            (sizeof(DTYPE) / 1024. / 1024.));
+      }
+    } else {
+      ret += graph->memory_cost_cpu();
+    }
+  }
+  return ret;
+}
+
+DTYPE Graph::memory_cost_gpu() {
+  DTYPE ret = 0;
+  for (auto graph : subgraphs_) {
+    if (graph->subgraphs_.empty()) {
+      Blob* blob = dynamic_cast<Blob*>(graph.get());
+      if (blob && blob->device() >= 0) {
+        ret += (blob->tensor()->size().count() *
+            (sizeof(DTYPE) / 1024. / 1024.));
+      }
+    } else {
+      ret += graph->memory_cost_gpu();
+    }
+  }
+  return ret;
+}
+
 }

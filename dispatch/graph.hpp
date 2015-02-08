@@ -60,6 +60,9 @@ class Graph {
   vector<Node*> nodes();
   vector<vector<string> > print();
 
+  DTYPE memory_cost_cpu();
+  DTYPE memory_cost_gpu();
+
   // create op
   template <typename O>
   Op<O>* create(const string& name, int rank, int device, const string& thread,
