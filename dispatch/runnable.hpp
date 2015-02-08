@@ -3,7 +3,10 @@
 #define PURINE_RUNNABLE
 
 #include <condition_variable>
+#include <map>
+#include <mutex>
 
+#include "common/loop.hpp"
 #include "dispatch/graph.hpp"
 #include "dispatch/node.hpp"
 
@@ -46,12 +49,15 @@ class Runnable : public Graph {
   bool prepared_ = false;
   void prepare_once();
   SinkCounter sink_counter_;
+  mutex mutex_;
+  map<tuple<int, string>, shared_ptr<Loop> > loops_;
  public:
   explicit Runnable(int rank = 0, int device = 0);
   virtual ~Runnable();
 
   inline SinkCounter& sink_counter() { return sink_counter_; }
 
+  Loop& task_loop(int device, const string& thread);
   void run();
   void run_async();
   void sync();

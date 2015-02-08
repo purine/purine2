@@ -1,6 +1,5 @@
 // Copyright Lin Min 2015
 #include <deque>
-#include "dispatch/looper.hpp"
 #include "dispatch/op.hpp"
 #include "dispatch/blob.hpp"
 #include "dispatch/runnable.hpp"
@@ -21,7 +20,8 @@ Op_::~Op_() {
 Loop& Op_::loop() {
   CHECK_EQ(rank_, current_rank());
   if (loop_ == NULL) {
-    loop_ = &Looper::task_loop(device_, thread_);
+    loop_ = &(dynamic_cast<Runnable*>(cached_root_)->
+        task_loop(device_, thread_));
   }
   return *loop_;
 }
