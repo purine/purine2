@@ -90,8 +90,8 @@ class ConvLayer : public Layer {
       B{ top_[1] } >> *bias_down >> B{ weight_[3] };
     } else {
       // inplace
-      Blob* tmp_data = create("...", top_[0]->shared_tensor());
-      Blob* tmp_diff = create("...", top_[1]->shared_tensor());
+      Blob* tmp_data = create("before_act", top_[0]->shared_tensor());
+      Blob* tmp_diff = create("before_act_diff", top_[1]->shared_tensor());
       B{ bottom_[0], weight_[0] } >> *conv_up >> B{ tmp_data };
       B{ weight_[1] } >> *bias_up >> B{ tmp_data };
       // backward

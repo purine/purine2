@@ -21,7 +21,7 @@ TEST_CASE("TestInception", "[Inception]") {
       InceptionLayer::param_tuple(5, 5, 5, 5, 5, 5));
   vector<Blob*>{ data, data_diff } >> *inception;
   inception->top();
-  Copy* cp = run.createFlexible<Copy>("copy", Copy::param_tuple(0, -1));
+  Copy* cp = run.createAny<Copy>("copy", Copy::param_tuple(0, -1));
   vector<Blob*>{ inception->top()[0] } >> *cp;
   // initialization
   vector<Blob*> weight = inception->weight_data();

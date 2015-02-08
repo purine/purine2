@@ -33,18 +33,18 @@ FetchImage::FetchImage(const string& source, const string& mean, bool mirror,
   int offset = 0;
   for (auto kv : images) {
     int size = batch_size * kv.second.size();
-    Blob* image = create("...", kv.first, -1,
+    Blob* image = create("IMAGES", kv.first, -1,
         {size, color ? 3 : 1, crop_size, crop_size});
-    Blob* label = create("...", kv.first, -1, {size, 1, 1, 1});
-    Op<ImageLabel>* image_label = create<ImageLabel>("...", kv.first, -1,
+    Blob* label = create("LABELS", kv.first, -1, {size, 1, 1, 1});
+    Op<ImageLabel>* image_label = create<ImageLabel>("FETCH", kv.first, -1,
         "fetch", ImageLabel::param_tuple(source, mean, mirror, random, color,
             interval, offset, size, crop_size));
     *image_label >> vector<Blob*>{ image, label };
 
-    Split* split_image = createGraph<Split>("...", kv.first, -1,
+    Split* split_image = createGraph<Split>("split_image", kv.first, -1,
         Split::param_tuple(Split::NUM),
         vector<int>(kv.second.size(), batch_size));
-    Split* split_label = createGraph<Split>("...", kv.first, -1,
+    Split* split_label = createGraph<Split>("split_label", kv.first, -1,
         Split::param_tuple(Split::NUM),
         vector<int>(kv.second.size(), batch_size));
     vector<Blob*>{ image } >> *split_image;
@@ -52,12 +52,12 @@ FetchImage::FetchImage(const string& source, const string& mean, bool mirror,
 
     // copy splitted images to the destination
     vector<vector<Blob*> >{ split_image->top() }
-    >> *createFlexible<Vectorize<Copy> >("...",
+    >> *createAny<Vectorize<Copy> >("copy_image_to_dest",
         vector<Copy::param_tuple>(kv.second.size()))
            >> vector<vector<Blob*> >{ kv.second };
 
     vector<vector<Blob*> >{ split_label->top() }
-    >> *createFlexible<Vectorize<Copy> >("...",
+    >> *createAny<Vectorize<Copy> >("copy_label_to_dest",
         vector<Copy::param_tuple>(kv.second.size()))
            >> vector<vector<Blob*> >{ labels[kv.first] };
 

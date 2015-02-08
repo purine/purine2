@@ -74,7 +74,7 @@ class Graph {
   G* createGraph(const string& name, const Args&... args);
 
   template <typename G, typename... Args>
-  G* createFlexible(const string& name, const Args&... args);
+  G* createAny(const string& name, const Args&... args);
 
   // create blob
   Blob* create(const string& name, int rank, int device, const Size& size);

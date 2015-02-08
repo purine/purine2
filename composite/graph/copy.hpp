@@ -19,17 +19,16 @@ Copy& operator >> (Copy& copy1, Copy& copy2) = delete;
  * copy's rank_ and device_ denotes the output location
  * rank and device are not required
  */
-class Copy : public Connectable {
-  friend Connectable& operator >> (Copy& copy, Connectable& graph);
-  friend Copy& operator >> (Connectable& graph, Copy& copy);
-  friend Copy& operator >> (const vector<Blob*>& inputs, Copy& copy);
-  friend const vector<Blob*>& operator >> (Copy& copy,
-      const vector<Blob*>& outputs);
+class Copy : public ConnectAny {
+  // friend Connectable& operator >> (Copy& copy, Connectable& graph);
+  // friend Copy& operator >> (Connectable& graph, Copy& copy);
+  // friend Copy& operator >> (const vector<Blob*>& inputs, Copy& copy);
+  // friend const vector<Blob*>& operator >> (Copy& copy,
+  //     const vector<Blob*>& outputs);
  public:
   typedef tuple<int, int> param_tuple;
   Copy(const param_tuple& args) {
     std::tie(rank_, device_) = args;
-    flexible_ = true;
   }
   virtual ~Copy() override {}
  protected:
@@ -41,14 +40,13 @@ class Copy : public Connectable {
  * { src1 } >> distribute >> { destA, destB, ... }
  * rank and device are not required
  */
-class Distribute : public Connectable {
+class Distribute : public ConnectAny {
  protected:
   vector<pair<int, int> > rank_device;
  public:
   typedef tuple<vector<pair<int, int> > > param_tuple;
   Distribute(const param_tuple& args) {
     std::tie(rank_device) = args;
-    flexible_ = true;
   }
   virtual ~Distribute() override {}
  protected:
@@ -59,7 +57,7 @@ class Distribute : public Connectable {
  * { blob1, blob2, ... } >> agg >> { dest }
  * rank and device are not required.
  */
-class Aggregate : public Connectable {
+class Aggregate : public ConnectAny {
  public:
   enum Type {
     SUM,
@@ -72,7 +70,6 @@ class Aggregate : public Connectable {
   typedef tuple<Type, int, int> param_tuple;
   Aggregate(const param_tuple& args) {
     std::tie(agg_type_, rank_, device_) = args;
-    flexible_ = true;
   }
   virtual ~Aggregate() override {}
 };

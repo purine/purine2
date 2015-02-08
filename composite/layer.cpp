@@ -85,7 +85,7 @@ Layer& operator >> (const vector<Blob*>& bottom, Layer& layer) {
   // Copyup
   vector<Blob*> bottom_data = first_half<Blob*>(bottom);
   vector<Blob*> bottom_diff = second_half<Blob*>(bottom);
-  auto vec_copy = layer.createFlexible<Vectorize<Copy> >("...",
+  auto vec_copy = layer.createAny<Vectorize<Copy> >("...",
       vector<Copy::param_tuple>(bottom_data.size(),
           Copy::param_tuple(layer.rank(), layer.device())));
   vector<B>{ bottom_data } >> *vec_copy;
@@ -98,7 +98,7 @@ Layer& operator >> (const vector<Blob*>& bottom, Layer& layer) {
         } else {
           Blob* tmp = layer.create("...", layer.rank(), layer.device(),
               b->tensor()->size());
-          B{ tmp } >> *layer.createFlexible<Copy>("...", Copy::param_tuple())
+          B{ tmp } >> *layer.createAny<Copy>("...", Copy::param_tuple())
                           >> B{ b };
           return tmp;
         }
@@ -123,13 +123,13 @@ const vector<Blob*>& operator >> (Layer& layer, const vector<Blob*>& top) {
         } else {
           Blob* tmp = layer.create("...", layer.rank(), layer.device(),
               b->tensor()->size());
-          B{ tmp } >> *layer.createFlexible<Copy>("...", Copy::param_tuple())
+          B{ tmp } >> *layer.createAny<Copy>("...", Copy::param_tuple())
                           >> B{ b };
           return tmp;
         }
       });
   // Copydown
-  Vectorize<Copy>* vec_copy = layer.createFlexible<Vectorize<Copy> >(
+  Vectorize<Copy>* vec_copy = layer.createAny<Vectorize<Copy> >(
       "...", vector<Copy::param_tuple>(top_diff.size(),
           Copy::param_tuple(layer.rank(), layer.device())));
   vector<B>{ top_diff } >> *vec_copy;

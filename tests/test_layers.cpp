@@ -242,7 +242,7 @@ TEST_CASE("TestInnerProduct", "[InnerProduct]") {
   *test_inner.create<Gaussian>("init", "main", make_tuple(0., 1.))
       >> B{ top_diff, weight, bottom, bias};
   Blob* top_cpu = test_inner.create("cpu_top", 0, -1, top->tensor()->size());
-  B{ top } >> *test_inner.createFlexible<Copy>("...", Copy::param_tuple())
+  B{ top } >> *test_inner.createAny<Copy>("...", Copy::param_tuple())
                   >> B{ top_cpu };
   test_inner.run();
 

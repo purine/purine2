@@ -3,7 +3,10 @@
 #ifndef PURINE_VECTORIZE
 #define PURINE_VECTORIZE
 
+#include <string>
 #include "dispatch/graph.hpp"
+
+using namespace std;
 
 namespace purine {
 
@@ -46,7 +49,7 @@ Vectorize<T>::Vectorize(const vector<int>& rank, const vector<int>& device,
   // create graph
   graphs_ = vector<T*>(args.size());
   for (int i = 0; i < args.size(); ++i) {
-    graphs_[i] = createGraph<T>(typeid(T).name(), rank[i], device[i], args[i]);
+    graphs_[i] = createGraph<T>(to_string(i), rank[i], device[i], args[i]);
   }
 }
 
@@ -56,7 +59,7 @@ Vectorize<T>::Vectorize(const vector<int>& rank, const vector<int>& device,
   CHECK_EQ(device.size(), rank.size());
   graphs_ = vector<T*>(rank.size());
   for (int i = 0; i < rank.size(); ++i) {
-    graphs_[i] = createGraph<T>(typeid(T).name(), rank[i], device[i]);
+    graphs_[i] = createGraph<T>(to_string(i), rank[i], device[i]);
   }
 }
 
@@ -65,7 +68,7 @@ Vectorize<T>::Vectorize(const vector<typename T::param_tuple>& args,
     bool transpose) : transpose_(transpose) {
   graphs_ = vector<T*>(args.size());
   for (int i = 0; i < args.size(); ++i) {
-    graphs_[i] = createFlexible<T>(typeid(T).name(), args[i]);
+    graphs_[i] = createAny<T>(to_string(i), args[i]);
   }
 }
 

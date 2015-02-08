@@ -36,8 +36,8 @@ TEST_CASE("TestCopy", "[Copy]") {
         Blob* twos_cpu = g.create("twos_cpu", rank, -1, {1, 10, 10, 10});
         Blob* twos_gpu = g.create("twos_gpu", rank, 0, {1, 10, 10, 10});
         Blob* dest_cpu = g.create("dest_cpu", rank, -1, {1, 10, 10, 10});
-        Copy* cp = g.createFlexible<Copy>("cp", Copy::param_tuple());
-        Copy* cp2 = g.createFlexible<Copy>("cp2", Copy::param_tuple());
+        Copy* cp = g.createAny<Copy>("cp", Copy::param_tuple());
+        Copy* cp2 = g.createAny<Copy>("cp2", Copy::param_tuple());
 
         *c >> B{ twos_cpu } >> *cp >> B{ twos_gpu } >> *cp2 >> B{ dest_cpu };
 
@@ -58,7 +58,7 @@ TEST_CASE("TestCopy", "[Copy]") {
       SECTION("gpu <-> gpu") {
         Blob* twos_gpu1 = g.create("twos_gpu1", rank, 0, {1, 10, 10, 10});
         Blob* twos_gpu2 = g.create("twos_gpu2", rank, 1, {1, 10, 10, 10});
-        Copy* cp = g.createFlexible<Copy>("cp", Copy::param_tuple());
+        Copy* cp = g.createAny<Copy>("cp", Copy::param_tuple());
         B{ twos_gpu1 } >> *cp >> B{ twos_gpu2 };
 
         // filler
@@ -92,7 +92,7 @@ TEST_CASE("TestCopy", "[Copy]") {
        */
       SECTION("gpu <-> gpu") {
         Blob* gpu = g.create("gpu", rank, 0, {1, 10, 10, 10});
-        Copy* cp = g.createFlexible<Copy>("cp", Copy::param_tuple(rank, 0));
+        Copy* cp = g.createAny<Copy>("cp", Copy::param_tuple(rank, 0));
         B{ gpu } >> *cp;
         cp->top();
         REQUIRE(cp->top() == B{ gpu });
@@ -108,7 +108,7 @@ TEST_CASE("TestCopy", "[Copy]") {
       SECTION("cpu <-> cpu") {
         Blob* rank1 = g.create("rank1", 0, -1, {1, 10, 10, 10});
         Blob* rank2 = g.create("rank2", 1, -1, {1, 10, 10, 10});
-        Copy* cp = g.createFlexible<Copy>("cp", Copy::param_tuple());
+        Copy* cp = g.createAny<Copy>("cp", Copy::param_tuple());
         B{ rank1 } >> *cp >> B{ rank2 };
 
         // filler
@@ -164,7 +164,7 @@ TEST_CASE("TestCopy", "[Copy]") {
     for (int i = 0; i < 10; ++i) {
       Blob* rank1 = g.create("rank1", 0, -1, {1, 10, 10, 10});
       Blob* rank2 = g.create("rank2", 1, -1, {1, 10, 10, 10});
-      Copy* cp = g.createFlexible<Copy>("cp", Copy::param_tuple());
+      Copy* cp = g.createAny<Copy>("cp", Copy::param_tuple());
       B{ rank1 } >> *cp >> B{ rank2 };
 
       // filler

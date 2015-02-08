@@ -50,9 +50,9 @@ vector<DTYPE> DataParallel<Net>::loss() {
             l[j]->shared_tensor());
       }
     }
-    net_losses >> *(compute_loss_->createFlexible<Vectorize<Aggregate> >(
+    net_losses >> *(compute_loss_->createAny<Vectorize<Aggregate> >(
         "agg_loss", vector<Aggregate::param_tuple>(loss_count,
-            Aggregate::param_tuple(Aggregate::AVERAGE))))
+            Aggregate::param_tuple(Aggregate::AVERAGE, 0, 0))))
     >> vector<vector<Blob*> >{ loss_ };
   }
   // run the compute loss graph
@@ -79,12 +79,12 @@ void DataParallel<Net>::init(vector<int> index,
   for (int i = 0; i < nets_weight_data_.size(); ++i) {
     weights[i] = vector<Blob*>(index.size());
     for (int j = 0; j < index.size(); ++j) {
-      weights[i][j] = initializer.create("...",
+      weights[i][j] = initializer.create("weight",
           nets_weight_data_[i][index[j]]->shared_tensor());
     }
   }
   vector<vector<Blob*> >{ tmp }
-  >> *initializer.createFlexible<Vectorize<Distribute> >("init_distribute",
+  >> *initializer.createAny<Vectorize<Distribute> >("init_distribute",
       vector<Distribute::param_tuple>(index.size(), Distribute::param_tuple()))
   >> weights;
   *rnd >> tmp;
@@ -125,7 +125,7 @@ DataParallel<Net>::DataParallel(const vector<pair<int, int> >& locations,
   int param_num = nets_weight_data_[0].size();
 
   // aggregate weight_diff
-  Vectorize<Aggregate>* agg = createFlexible<Vectorize<Aggregate> >("aggregate",
+  Vectorize<Aggregate>* agg = createAny<Vectorize<Aggregate> >("aggregate",
       vector<Aggregate::param_tuple>(param_num,
           Aggregate::param_tuple(Aggregate::AVERAGE, rank_, device_)));
   nets_weight_diff_ >> *agg;
@@ -145,7 +145,7 @@ DataParallel<Net>::DataParallel(const vector<pair<int, int> >& locations,
 
   // update
   vector<Update::param_tuple> update_params();
-  Vectorize<Update>* updator = createFlexible<Vectorize<Update> >(
+  Vectorize<Update>* updator = createAny<Vectorize<Update> >(
       "updator", vector<int>(param_num, rank_), vector<int>(param_num, device_),
       vector<Update::param_tuple>(param_num,
           Update::param_tuple(0.9, 0.01, 0.0005)));
@@ -154,7 +154,7 @@ DataParallel<Net>::DataParallel(const vector<pair<int, int> >& locations,
 
   // distribute weight
   vector<vector<Blob*> >{ new_weight_ }
-  >> *createFlexible<Vectorize<Distribute> >("distribute",
+  >> *createAny<Vectorize<Distribute> >("distribute",
       vector<Distribute::param_tuple>(param_num, Distribute::param_tuple()))
          >> new_weights_;
 

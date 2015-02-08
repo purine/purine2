@@ -68,28 +68,6 @@ void Copy::setup() {
   }
 }
 
-Connectable& operator >> (Copy& copy, Connectable& graph) {
-  int num = copy.bottom().size();
-  copy.rank_ = graph.rank();
-  copy.device_ = graph.device();
-  return copy.top() >> graph;
-}
-
-Copy& operator >> (Connectable& graph, Copy& copy) {
-  copy.set_bottom(graph.top());
-  return copy;
-}
-
-Copy& operator >> (const vector<Blob*>& inputs, Copy& copy) {
-  copy.set_bottom(inputs);
-  return copy;
-}
-
-const vector<Blob*>& operator >> (Copy& copy, const vector<Blob*>& outputs) {
-  copy.set_top(outputs);
-  return outputs;
-}
-
 void Distribute::setup() {
   CHECK(bottom_setup_);
   // check top
@@ -104,8 +82,8 @@ void Distribute::setup() {
           rank_device[i].second == bottom_[0]->device()) {
         top_[i] = bottom_[0];
       } else {
-        top_[i] = create("...", rank_device[i].first, rank_device[i].second,
-            bottom_[0]->tensor()->size());
+        top_[i] = create("dist_dest_" + to_string(i), rank_device[i].first,
+            rank_device[i].second, bottom_[0]->tensor()->size());
       }
     }
   }
@@ -115,8 +93,8 @@ void Distribute::setup() {
     // if top is on the same machine as bottom
     if (b->rank() == bottom_[0]->rank()) {
       if (b != bottom_[0]) {
-        bottom_ >> *createFlexible<Copy>("...", Copy::param_tuple())
-        >> vector<Blob*>{ b };
+        bottom_ >> *createAny<Copy>("dist_same_machine",
+            Copy::param_tuple()) >> vector<Blob*>{ b };
       }
       continue;
     }
@@ -129,7 +107,7 @@ void Distribute::setup() {
     // if top is on CPU, it can be the route
     if (b->device() < 0 && routes.count(b->rank()) == 0) {
       routes[b->rank()] = create("route", b->shared_tensor());
-      bottom_ >> *createFlexible<Copy>("...", Copy::param_tuple())
+      bottom_ >> *createAny<Copy>("dist_to_router", Copy::param_tuple())
       >> vector<Blob*>{ routes[b->rank()] };
     }
   }
@@ -137,17 +115,17 @@ void Distribute::setup() {
     if (routes.count(kv.first) == 0) {
       routes[kv.first] = create("route", kv.first, -1,
           bottom_[0]->tensor()->size());
-      bottom_ >> *createFlexible<Copy>("...", Copy::param_tuple())
+      bottom_ >> *createAny<Copy>("dist_to_router", Copy::param_tuple())
       >> vector<Blob*>{ routes[kv.first] };
     }
     Blob* route = routes[kv.first];
     for (Blob* top : kv.second) {
       if (route->tensor() == top->tensor()) {
-        vector<Blob*>{ route } >> *create<Dummy>("...", route->rank(),
+        vector<Blob*>{ route } >> *create<Dummy>("dummy_redist", route->rank(),
             route->device(), "main", Dummy::param_tuple())
                                       >> vector<Blob*>{ top };
       } else {
-        vector<Blob*>{ route } >> *createFlexible<Copy>("...",
+        vector<Blob*>{ route } >> *createAny<Copy>("redist",
             Copy::param_tuple()) >> vector<Blob*>{ top };
       }
     }
@@ -174,7 +152,7 @@ void Aggregate::setup() {
   for (int i = 0; i < bottom_.size(); ++i) {
     if (bottom_[i]->rank() != top_[0]->rank() &&
         local_aggs.count(bottom_[i]->rank()) == 0) {
-      local_aggs[bottom_[i]->rank()] = createFlexible<Aggregate>("local_agg",
+      local_aggs[bottom_[i]->rank()] = createAny<Aggregate>("local_agg",
           param_tuple(Type::SUM, bottom_[i]->rank(), -1));
       local_blobs[bottom_[i]->rank()] = { bottom_[i] };
     } else if (bottom_[i]->rank() != top_[0]->rank()) {
@@ -194,7 +172,7 @@ void Aggregate::setup() {
       });
   dest_blobs.insert(dest_blobs.end(), agged.begin(), agged.end());
 
-  auto copy = createFlexible<Vectorize<Copy> >("...",
+  auto copy = createAny<Vectorize<Copy> >("agg_to_dest",
       vector<Copy::param_tuple>(dest_blobs.size(),
           Copy::param_tuple(top_[0]->rank(), top_[0]->device())));
   vector<vector<Blob*> >{ dest_blobs } >> *copy;

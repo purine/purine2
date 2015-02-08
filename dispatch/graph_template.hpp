@@ -49,7 +49,7 @@ G* Graph::createGraph(const string& name, int rank, int device,
 }
 
 template <typename G, typename... Args>
-G* Graph::createFlexible(const string& name, const Args&... args) {
+G* Graph::createAny(const string& name, const Args&... args) {
   subgraphs_.push_back(shared_ptr<Graph>(new G(args...)));
   Graph* g = subgraphs_.rbegin()->get();
   graph_name_[g] = name;

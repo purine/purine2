@@ -46,19 +46,21 @@ class SoftmaxLossLayer : public Layer {
 
     // forward
     Blob* label_cpu =
-        (B{ label_ } >> *createFlexible<Copy>("...",
+        (B{ label_ } >> *createAny<Copy>("label_cpu",
             Copy::param_tuple(rank_, -1))).top()[0];
 
     Blob* softmaxed_cpu = (B{ bottom_[0] } >> *softmax >>
         B{ create("softmaxed", bottom_[0]->tensor()->size()) } >>
-        *createFlexible<Copy>("...", Copy::param_tuple(rank_, -1))).top()[0];
+        *createAny<Copy>("softmaxed_cpu",
+            Copy::param_tuple(rank_, -1))).top()[0];
 
     B{ softmaxed_cpu, label_cpu } >> *softmaxloss >> B{ loss_[0] };
     // backward
     B{ softmaxed_cpu, label_cpu, loss_[1] } >>
-        *softmaxloss_down >> B{ create("...", rank_, -1,
+        *softmaxloss_down >> B{ create("softmaxloss_diff_cpu", rank_, -1,
               bottom_[1]->tensor()->size()) }
-        >> *createFlexible<Copy>("...", Copy::param_tuple()) >> B{ bottom_[1] };
+        >> *createAny<Copy>("softmaxloss_diff",
+            Copy::param_tuple()) >> B{ bottom_[1] };
   }
 };
 
