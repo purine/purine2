@@ -33,11 +33,11 @@ void LRN::compute_gpu(const vector<bool>& add) {
   int n_threads = s.count();
   if (add[0] == false) {
     LRNComputeOutput<DTYPE, false><<<CAFFE_GET_BLOCKS(n_threads),
-        CAFFE_CUDA_NUM_THREADS>>>(
+        CAFFE_CUDA_NUM_THREADS, 0, stream()>>>(
             n_threads, bottom_data, scale_data, -beta, top_data);
   } else {
     LRNComputeOutput<DTYPE, true><<<CAFFE_GET_BLOCKS(n_threads),
-        CAFFE_CUDA_NUM_THREADS>>>(
+        CAFFE_CUDA_NUM_THREADS, 0, stream()>>>(
             n_threads, bottom_data, scale_data, -beta, top_data);
   }
   CUDA_POST_KERNEL_CHECK;
@@ -102,7 +102,8 @@ void LRNScale::compute_gpu(const vector<bool>& add) {
   const DTYPE* bottom_data = inputs_[0]->gpu_data();
   DTYPE* top_data = outputs_[0]->mutable_gpu_data();
   int n_threads = s.num() * s.height() * s.width();
-  LRNFillScale<DTYPE><<<CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS>>>(
+  LRNFillScale<DTYPE><<<CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS, 0,
+      stream()>>>(
       n_threads, bottom_data, s.num(), s.channels(), s.height(), s.width(),
       size, alpha / size, top_data);
   CUDA_POST_KERNEL_CHECK;
@@ -209,14 +210,14 @@ void LRNDown::compute_gpu(const vector<bool>& add) {
   int n_threads = s.num() * s.height() * s.width();
   if (add[0] == false) {
     LRNComputeDiff<DTYPE, false><<<CAFFE_GET_BLOCKS(n_threads),
-        CAFFE_CUDA_NUM_THREADS>>>(
+        CAFFE_CUDA_NUM_THREADS, 0, stream()>>>(
             n_threads, inputs_[0]->gpu_data(), inputs_[3]->gpu_data(),
             inputs_[2]->gpu_data(), inputs_[1]->gpu_data(), s.num(),
             s.channels(), s.height(), s.width(), size, -beta,
             DTYPE(2. * alpha * beta / size), outputs_[0]->mutable_gpu_data());
   } else {
     LRNComputeDiff<DTYPE, true><<<CAFFE_GET_BLOCKS(n_threads),
-        CAFFE_CUDA_NUM_THREADS>>>(
+        CAFFE_CUDA_NUM_THREADS, 0, stream()>>>(
             n_threads, inputs_[0]->gpu_data(), inputs_[3]->gpu_data(),
             inputs_[2]->gpu_data(), inputs_[1]->gpu_data(), s.num(),
             s.channels(), s.height(), s.width(), size, -beta,
