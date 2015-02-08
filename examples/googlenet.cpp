@@ -109,7 +109,7 @@ using namespace purine;
 int main(int argc, char** argv) {
   // initilize MPI
   int ret;
-  MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &ret);
+  MPI_CHECK(MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &ret));
   // parallels
   vector<pair<int, int> > parallels;
   for (int rank : {0}) {
@@ -120,12 +120,13 @@ int main(int argc, char** argv) {
   // parameter server
   pair<int, int> param_server = {0, -1};
   // fetch image
-  FetchImage fetch(source, mean_file, true, true, true, batch_size, 224,
-      parallels);
-  fetch.run();
+  shared_ptr<FetchImage> fetch = make_shared<FetchImage>(source, mean_file,
+      true, true, true, batch_size, 224, parallels);
+  fetch->run();
   // create data parallelism of GoogLeNet;
-  DataParallel<GoogLeNet> parallel_googlenet(parallels, param_server);
-  // print_graph(parallel_googlenet.print());
+  shared_ptr<DataParallel<GoogLeNet> > parallel_googlenet
+      = make_shared<DataParallel<GoogLeNet> >(parallels, param_server);
+  // print_graph(parallel_googlenet->print());
   // do the initialization
   vector<int> indice(58);
   iota(indice.begin(), indice.end(), 0);
@@ -139,21 +140,23 @@ int main(int argc, char** argv) {
       [](int i)->int {
         return i * 2 + 1;
       });
-  parallel_googlenet.init<Constant>(bias_indice, Constant::param_tuple(0.));
-  parallel_googlenet.init<Gaussian>(weight_indice,
+  parallel_googlenet->init<Constant>(bias_indice, Constant::param_tuple(0.));
+  parallel_googlenet->init<Gaussian>(weight_indice,
       Gaussian::param_tuple(0., 0.05));
-  parallel_googlenet.init<Gaussian>({0, 4, 114, 110, 106, 98, 94},
+  parallel_googlenet->init<Gaussian>({0, 4, 114, 110, 106, 98, 94},
       Gaussian::param_tuple(0., 0.01));
   // iteration
   for (int iter = 0; iter < 10000; ++iter) {
     // feed prefetched data to googlenet
-    parallel_googlenet.feed(fetch.images(), fetch.labels());
+    parallel_googlenet->feed(fetch->images(), fetch->labels());
     // start googlenet and next fetch
-    parallel_googlenet.run_async();
-    fetch.run_async();
-    fetch.sync();
-    parallel_googlenet.sync();
+    parallel_googlenet->run_async();
+    fetch->run_async();
+    fetch->sync();
+    parallel_googlenet->sync();
   }
+  fetch.reset();
+  parallel_googlenet.reset();
   // Finalize MPI
-  MPI_Finalize();
+  MPI_CHECK(MPI_Finalize());
 }

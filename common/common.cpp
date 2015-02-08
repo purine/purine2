@@ -63,7 +63,7 @@ rng_t* caffe_rng() {
 
 int current_rank() {
   int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_CHECK(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
   return rank;
 }
 
