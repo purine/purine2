@@ -154,6 +154,10 @@ int main(int argc, char** argv) {
     fetch->run_async();
     fetch->sync();
     parallel_googlenet->sync();
+    if (iter % 10 == 0) {
+      vector<DTYPE> loss = parallel_googlenet->loss();
+      LOG(INFO) << "iteration: " << iter << ", loss: " << loss[0];
+    }
   }
   fetch.reset();
   parallel_googlenet.reset();
