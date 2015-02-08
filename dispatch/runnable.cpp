@@ -72,6 +72,9 @@ vector<vector<string> > Runnable::print() {
     if (all_of(outputs.begin(), outputs.end(), [&](Node* n)->bool {
               return visited.find(n) != visited.end();
             })) {
+      if (outputs.size() != 0) {
+        tmp.push_back(outputs[0]);
+      }
       vector<string> tmp_name(tmp.size());
       transform(tmp.begin(), tmp.end(), tmp_name.begin(),
           [] (Node* n)->string {
