@@ -39,6 +39,16 @@ namespace purine {
   } while(0)
 
 /**
+ * @macro
+ */
+#define MPI_LOG(info) \
+  do { \
+    if (current_rank() == 0) { \
+      LOG(INFO) info; \
+    } \
+  } while(0)
+
+/**
  * @brief return the mpi error string from the error code.
  */
 string mpi_strerror(int errorcode);

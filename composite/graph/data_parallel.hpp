@@ -2,7 +2,10 @@
 #ifndef PURINE_DATA_PARALLEL
 #define PURINE_DATA_PARALLEL
 
+#include <iomanip>
 #include "composite/composite.hpp"
+
+using namespace std;
 
 namespace purine {
 
@@ -28,6 +31,8 @@ class DataParallel : public Runnable {
   template <typename Random>
   void init(vector<int> index, const typename Random::param_tuple& args);
   vector<DTYPE> loss();
+  void print_weight_diff_l1();
+  void print_weight_l1();
   void feed(const vector<Blob*>& data, const vector<Blob*>& labels);
 };
 
@@ -62,6 +67,45 @@ vector<DTYPE> DataParallel<Net>::loss() {
         return b->tensor()->cpu_data()[0];
       });
   return ret;
+}
+
+template <typename Net>
+void DataParallel<Net>::print_weight_diff_l1() {
+  if (current_rank() == this->rank_) {
+    int max_len = 0;
+    for (int i = 0; i < history_.size(); ++i) {
+      int len = nets_weight_data_[0][i]->cached_name().length();
+      max_len = max_len > len ? max_len : len;
+    }
+    for (int i = 0; i < history_.size(); ++i) {
+      Blob* b = history_[i];
+      DTYPE abs_sum = 0;
+      const DTYPE* data = b->tensor()->cpu_data();
+      for (int i = 0; i < b->tensor()->size().count(); ++i) {
+        abs_sum += abs(data[i]);
+      }
+      abs_sum /= b->tensor()->size().count();
+      LOG(INFO) << std::left << std::setw(max_len + 1) << std::setfill(' ') <<
+          nets_weight_data_[0][i]->cached_name() << "[" << abs_sum << "]";
+    }
+  }
+}
+
+template <typename Net>
+void DataParallel<Net>::print_weight_l1() {
+  if (current_rank() == this->rank_) {
+    for (int i = 0; i < weight_.size(); ++i) {
+      Blob* b = weight_[i];
+      DTYPE abs_sum = 0;
+      const DTYPE* data = b->tensor()->cpu_data();
+      for (int i = 0; i < b->tensor()->size().count(); ++i) {
+        abs_sum += abs(data[i]);
+      }
+      abs_sum /= b->tensor()->size().count();
+      LOG(INFO) << nets_weight_data_[0][i]->cached_name()
+      << "(" << abs_sum << ")";
+    }
+  }
 }
 
 template <typename Net>

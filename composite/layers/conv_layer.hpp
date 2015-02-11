@@ -102,8 +102,6 @@ class ConvLayer : public Layer {
           ActivationLayer::param_tuple(activation, true));
       B{ tmp_data, tmp_diff } >> *act >> top_;
     }
-
-
   }
 };
 

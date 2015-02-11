@@ -156,7 +156,8 @@ int main(int argc, char** argv) {
     parallel_googlenet->sync();
     if (iter % 10 == 0) {
       vector<DTYPE> loss = parallel_googlenet->loss();
-      LOG(INFO) << "iteration: " << iter << ", loss: " << loss[0];
+      MPI_LOG( << "iteration: " << iter << ", loss: " << loss[0]);
+      parallel_googlenet->print_weight_diff_l1();
     }
   }
   fetch.reset();

@@ -156,6 +156,9 @@ void Runnable::run() {
 void Runnable::run_async() {
   prepare_once();
   for (Node* source : cached_sources_) {
+#ifndef NDEBUG
+    LOG(INFO) << "source: " << source->cached_name();
+#endif
     source->compute();
   }
 }
