@@ -27,7 +27,7 @@ class Activation : public Operation {
 };
 
 /**
- * { top_diff, top } >> op >> { bottom_diff }
+ * { top_diff, top, bottom } >> op >> { bottom_diff }
  */
 class ActivationDown : public Operation {
  protected:

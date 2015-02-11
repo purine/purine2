@@ -56,7 +56,7 @@ class ActivationLayer : public Layer {
     // forward
     B{ bottom_[0] } >> *activation_up >> B{ top_[0] };
     // backward
-    B{ top_[1], top_[0] } >> *activation_down >> B{ bottom_[1] };
+    B{ top_[1], top_[0], bottom_[0] } >> *activation_down >> B{ bottom_[1] };
   }
 };
 
