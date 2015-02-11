@@ -29,23 +29,23 @@ void Blob::compute() {
     for (Node* out : outputs_) {
       out->inc_in();
     }
-    return;
-  }
-  // record cudaevent if outputs are in different thread as in input.
-  // and inputs are executed in GPU.
-  int device = static_cast<Op_*>(inputs_[0])->device();
-  if (device >= 0) {
-    Loop& in_loop = static_cast<Op_*>(inputs_[0])->loop();
-    if (any_of(outputs_.begin(), outputs_.end(),
-            [&](Node* output)->bool {
-              Op_* op = static_cast<Op_*>(output);
-              return &op->loop() != &in_loop;
-            }) || outputs_.size() == 0) {
-      if (cuda_event_ == NULL) {
-        CUDA_CHECK(cudaEventCreate(&cuda_event_,
-                cudaEventBlockingSync|cudaEventDisableTiming));
+  } else {
+    // record cudaevent if outputs are in different thread as in input.
+    // and inputs are executed in GPU.
+    int device = static_cast<Op_*>(inputs_[0])->device();
+    if (device >= 0) {
+      Loop& in_loop = static_cast<Op_*>(inputs_[0])->loop();
+      if (any_of(outputs_.begin(), outputs_.end(),
+              [&](Node* output)->bool {
+                Op_* op = static_cast<Op_*>(output);
+                return &op->loop() != &in_loop;
+              }) || outputs_.size() == 0) {
+        if (cuda_event_ == NULL) {
+          CUDA_CHECK(cudaEventCreate(&cuda_event_,
+                  cudaEventBlockingSync|cudaEventDisableTiming));
+        }
+        CUDA_CHECK(cudaEventRecord(cuda_event_, stream()));
       }
-      CUDA_CHECK(cudaEventRecord(cuda_event_, stream()));
     }
   }
   // if this blob is a sink
