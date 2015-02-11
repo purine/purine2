@@ -3,7 +3,7 @@
 #define PURINE_ACTIVATION
 
 #include <string>
-#include "caffeine/cudnn.hpp"
+#include "operations/cudnn.hpp"
 #include "operations/operation.hpp"
 
 using std::string;

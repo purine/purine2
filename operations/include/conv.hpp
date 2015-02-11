@@ -4,7 +4,7 @@
 #define PURINE_CONV
 
 #include "operations/operation.hpp"
-#include "caffeine/cudnn.hpp"
+#include "operations/cudnn.hpp"
 #include "operations/tensor.hpp"
 
 namespace purine {

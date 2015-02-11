@@ -12,15 +12,9 @@ Bias::Bias(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
   CHECK_EQ(bias_size.height(), 1);
   CHECK_EQ(bias_size.width(), 1);
   Stride bias_stride = inputs_[0]->stride();
-  cudnn::createTensor4dDesc<DTYPE>(&bias_desc_, bias_size.num(),
-      bias_size.channels(), bias_size.height(), bias_size.width(),
-      bias_stride.nstride(), bias_stride.cstride(), bias_stride.hstride(),
-      bias_stride.wstride());
+  cudnn::createTensor4dDesc<DTYPE>(&bias_desc_, bias_size, bias_stride);
   Stride top_stride = outputs_[0]->stride();
-  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size.num(),
-      top_size.channels(), top_size.height(), top_size.width(),
-      top_stride.nstride(), top_stride.cstride(), top_stride.hstride(),
-      top_stride.wstride());
+  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size, top_stride);
 }
 
 Bias::~Bias() {
@@ -51,15 +45,9 @@ BiasDown::BiasDown(const vector<Tensor*>& inputs,
   CHECK_EQ(bias_size.height(), 1);
   CHECK_EQ(bias_size.width(), 1);
   Stride bias_stride = outputs_[0]->stride();
-  cudnn::createTensor4dDesc<DTYPE>(&bias_desc_, bias_size.num(),
-      bias_size.channels(), bias_size.height(), bias_size.width(),
-      bias_stride.nstride(), bias_stride.cstride(), bias_stride.hstride(),
-      bias_stride.wstride());
+  cudnn::createTensor4dDesc<DTYPE>(&bias_desc_, bias_size, bias_stride);
   Stride top_stride = inputs_[0]->stride();
-  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size.num(),
-      top_size.channels(), top_size.height(), top_size.width(),
-      top_stride.nstride(), top_stride.cstride(), top_stride.hstride(),
-      top_stride.wstride());
+  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size, top_stride);
 }
 
 BiasDown::~BiasDown() {

@@ -2,7 +2,7 @@
 #ifndef PURINE_POOL
 #define PURINE_POOL
 
-#include "caffeine/cudnn.hpp"
+#include "operations/cudnn.hpp"
 #include "operations/operation.hpp"
 
 namespace purine {

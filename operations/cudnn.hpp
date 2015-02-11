@@ -1,11 +1,13 @@
-#ifndef CAFFE_UTIL_CUDNN_H_
-#define CAFFE_UTIL_CUDNN_H_
+#ifndef PURINE_CUDNN
+#define PURINE_CUDNN
 
 #include <glog/logging.h>
 #include <cudnn.h>
+#include <cudv1.h>
 
 #include "common/common.hpp"
 #include "common/cuda.hpp"
+#include "operations/size.hpp"
 
 using namespace purine;
 
@@ -22,31 +24,25 @@ template<> class dataType<double> {
 };
 
 template <typename Dtype>
-inline void createTensor4dDesc(cudnnTensorDescriptor_t* desc,
-    int n, int c, int h, int w,
-    int stride_n, int stride_c, int stride_h, int stride_w) {
+inline void createTensor4dDesc(cudnnTensorDescriptor_t* desc, Size size,
+    Stride stride) {
   CUDNN_CHECK(cudnnCreateTensorDescriptor(desc));
   CUDNN_CHECK(cudnnSetTensor4dDescriptorEx(*desc, dataType<Dtype>::type,
-      n, c, h, w, stride_n, stride_c, stride_h, stride_w));
+          size.num(), size.channels(), size.height(), size.width(),
+          stride.nstride(), stride.cstride(), stride.hstride(),
+          stride.wstride()));
 }
 
 template <typename Dtype>
-inline void createTensor4dDesc(cudnnTensorDescriptor_t* desc,
-    int n, int c, int h, int w) {
-  const int stride_w = 1;
-  const int stride_h = w * stride_w;
-  const int stride_c = h * stride_h;
-  const int stride_n = c * stride_c;
-  createTensor4dDesc<Dtype>(desc, n, c, h, w,
-      stride_n, stride_c, stride_h, stride_w);
+inline void createTensor4dDesc(cudnnTensorDescriptor_t* desc, Size size) {
+  createTensor4dDesc<Dtype>(desc, size, Stride(size));
 }
 
 template <typename Dtype>
-inline void createFilterDesc(cudnnFilterDescriptor_t* desc,
-    int n, int c, int h, int w) {
+inline void createFilterDesc(cudnnFilterDescriptor_t* desc, Size size) {
   CUDNN_CHECK(cudnnCreateFilterDescriptor(desc));
   CUDNN_CHECK(cudnnSetFilter4dDescriptor(*desc, dataType<Dtype>::type,
-      n, c, h, w));
+          size.num(), size.channels(), size.height(), size.width()));
 }
 
 template <typename Dtype>
@@ -68,4 +64,4 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool,
 
 }  // namespace cudnn
 
-#endif  // CAFFE_UTIL_CUDNN_H_
+#endif

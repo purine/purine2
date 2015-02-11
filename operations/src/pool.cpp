@@ -18,14 +18,8 @@ Pool::Pool(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
       bottom_size.height() + 2 * pad_h - kernel_h) / stride_h)) + 1);
   CHECK_EQ(top_size.width(), static_cast<int>(ceil(static_cast<float>(
       bottom_size.width() + 2 * pad_w - kernel_w) / stride_w)) + 1);
-  cudnn::createTensor4dDesc<DTYPE>(&bottom_desc_, bottom_size.num(),
-      bottom_size.channels(), bottom_size.height(), bottom_size.width(),
-      bottom_stride.nstride(), bottom_stride.cstride(),
-      bottom_stride.hstride(), bottom_stride.wstride());
-  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size.num(),
-      top_size.channels(), top_size.height(), top_size.width(),
-      top_stride.nstride(), top_stride.cstride(), top_stride.hstride(),
-      top_stride.wstride());
+  cudnn::createTensor4dDesc<DTYPE>(&bottom_desc_, bottom_size, bottom_stride);
+  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size, top_stride);
   cudnnPoolingMode_t mode;
   if (method == "max") {
     mode = CUDNN_POOLING_MAX;
@@ -68,14 +62,8 @@ PoolDown::PoolDown(const vector<Tensor*>& inputs,
       bottom_size.width() + 2 * pad_w - kernel_w) / stride_w)) + 1);
   Stride bottom_stride = outputs_[0]->stride();
   Stride top_stride = inputs_[0]->stride();
-  cudnn::createTensor4dDesc<DTYPE>(&bottom_desc_, bottom_size.num(),
-      bottom_size.channels(), bottom_size.height(), bottom_size.width(),
-      bottom_stride.nstride(), bottom_stride.cstride(),
-      bottom_stride.hstride(), bottom_stride.wstride());
-  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size.num(),
-      top_size.channels(), top_size.height(), top_size.width(),
-      top_stride.nstride(), top_stride.cstride(), top_stride.hstride(),
-      top_stride.wstride());
+  cudnn::createTensor4dDesc<DTYPE>(&bottom_desc_, bottom_size, bottom_stride);
+  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size, top_stride);
   cudnnPoolingMode_t mode;
   if (method == "max") {
     mode = CUDNN_POOLING_MAX;

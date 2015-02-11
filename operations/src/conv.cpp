@@ -22,16 +22,9 @@ Conv::Conv(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
       / stride_h + 1, top_size.height());
   CHECK_EQ((bottom_size.width() + 2 * pad_w - kernel_size.width())
       / stride_w + 1, top_size.width());
-  cudnn::createTensor4dDesc<DTYPE>(&bottom_desc_, bottom_size.num(),
-      bottom_size.channels(), bottom_size.height(), bottom_size.width(),
-      bottom_stride.nstride(), bottom_stride.cstride(),
-      bottom_stride.hstride(), bottom_stride.wstride());
-  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size.num(),
-      top_size.channels(), top_size.height(), top_size.width(),
-      top_stride.nstride(), top_stride.cstride(), top_stride.hstride(),
-      top_stride.wstride());
-  cudnn::createFilterDesc<DTYPE>(&filter_desc_, kernel_size.num(),
-      kernel_size.channels(), kernel_size.height(), kernel_size.width());
+  cudnn::createTensor4dDesc<DTYPE>(&bottom_desc_, bottom_size, bottom_stride);
+  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size, top_stride);
+  cudnn::createFilterDesc<DTYPE>(&filter_desc_, kernel_size);
   cudnn::createConvolutionDesc<DTYPE>(&conv_desc_, pad_h, pad_w, stride_h,
       stride_w);
   CUDNN_CHECK(cudnnGetConvolutionForwardAlgorithm(cudnn_handle(), bottom_desc_,
@@ -80,16 +73,9 @@ ConvDown::ConvDown(const vector<Tensor*>& inputs,
       / stride_h + 1, top_size.height());
   CHECK_EQ((bottom_size.width() + 2 * pad_w - kernel_size.width())
       / stride_w + 1, top_size.width());
-  cudnn::createTensor4dDesc<DTYPE>(&bottom_desc_, bottom_size.num(),
-      bottom_size.channels(), bottom_size.height(), bottom_size.width(),
-      bottom_stride.nstride(), bottom_stride.cstride(),
-      bottom_stride.hstride(), bottom_stride.wstride());
-  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size.num(),
-      top_size.channels(), top_size.height(), top_size.width(),
-      top_stride.nstride(), top_stride.cstride(), top_stride.hstride(),
-      top_stride.wstride());
-  cudnn::createFilterDesc<DTYPE>(&filter_desc_, kernel_size.num(),
-      kernel_size.channels(), kernel_size.height(), kernel_size.width());
+  cudnn::createTensor4dDesc<DTYPE>(&bottom_desc_, bottom_size, bottom_stride);
+  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size, top_stride);
+  cudnn::createFilterDesc<DTYPE>(&filter_desc_, kernel_size);
   cudnn::createConvolutionDesc<DTYPE>(&conv_desc_, pad_h, pad_w, stride_h,
       stride_w);
 }
@@ -128,16 +114,9 @@ ConvWeight::ConvWeight(const vector<Tensor*>& inputs,
       / stride_h + 1, top_size.height());
   CHECK_EQ((bottom_size.width() + 2 * pad_w - kernel_size.width())
       / stride_w + 1, top_size.width());
-  cudnn::createTensor4dDesc<DTYPE>(&bottom_desc_, bottom_size.num(),
-      bottom_size.channels(), bottom_size.height(), bottom_size.width(),
-      bottom_stride.nstride(), bottom_stride.cstride(),
-      bottom_stride.hstride(), bottom_stride.wstride());
-  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size.num(),
-      top_size.channels(), top_size.height(), top_size.width(),
-      top_stride.nstride(), top_stride.cstride(), top_stride.hstride(),
-      top_stride.wstride());
-  cudnn::createFilterDesc<DTYPE>(&filter_desc_, kernel_size.num(),
-      kernel_size.channels(), kernel_size.height(), kernel_size.width());
+  cudnn::createTensor4dDesc<DTYPE>(&bottom_desc_, bottom_size, bottom_stride);
+  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size, top_stride);
+  cudnn::createFilterDesc<DTYPE>(&filter_desc_, kernel_size);
   cudnn::createConvolutionDesc<DTYPE>(&conv_desc_, pad_h, pad_w, stride_h,
       stride_w);
 }

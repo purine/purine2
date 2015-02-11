@@ -3,7 +3,7 @@
 #include <cfloat>
 
 #include "operations/include/softmax.hpp"
-#include "caffeine/cudnn.hpp"
+#include "operations/cudnn.hpp"
 #include "caffeine/math_functions.hpp"
 
 using std::string;
@@ -19,14 +19,8 @@ Softmax::Softmax(const vector<Tensor*>& inputs,
   Size top_size = outputs_[0]->size();
   Stride bottom_stride = inputs_[0]->stride();
   Stride top_stride = outputs_[0]->stride();
-  cudnn::createTensor4dDesc<DTYPE>(&bottom_desc_, bottom_size.num(),
-      bottom_size.channels(), bottom_size.height(), bottom_size.width(),
-      bottom_stride.nstride(), bottom_stride.cstride(),
-      bottom_stride.hstride(), bottom_stride.wstride());
-  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size.num(),
-      top_size.channels(), top_size.height(), top_size.width(),
-      top_stride.nstride(), top_stride.cstride(), top_stride.hstride(),
-      top_stride.wstride());
+  cudnn::createTensor4dDesc<DTYPE>(&bottom_desc_, bottom_size, bottom_stride);
+  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size, top_stride);
   if (mode == "channel") {
     softmax_mode_ = CUDNN_SOFTMAX_MODE_CHANNEL;
   } else if (mode == "instance") {
@@ -63,14 +57,8 @@ SoftmaxDown::SoftmaxDown(const vector<Tensor*>& inputs,
   Size top_size = inputs_[0]->size();
   Stride bottom_stride = outputs_[0]->stride();
   Stride top_stride = inputs_[0]->stride();
-  cudnn::createTensor4dDesc<DTYPE>(&bottom_desc_, bottom_size.num(),
-      bottom_size.channels(), bottom_size.height(), bottom_size.width(),
-      bottom_stride.nstride(), bottom_stride.cstride(),
-      bottom_stride.hstride(), bottom_stride.wstride());
-  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size.num(),
-      top_size.channels(), top_size.height(), top_size.width(),
-      top_stride.nstride(), top_stride.cstride(), top_stride.hstride(),
-      top_stride.wstride());
+  cudnn::createTensor4dDesc<DTYPE>(&bottom_desc_, bottom_size, bottom_stride);
+  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size, top_stride);
   if (mode == "channel") {
     softmax_mode_ = CUDNN_SOFTMAX_MODE_CHANNEL;
   } else if (mode == "instance") {
