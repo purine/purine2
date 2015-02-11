@@ -24,12 +24,7 @@ Blob::~Blob() {
 
 // this is always called from in_thread
 void Blob::compute() {
-  if (inputs_.size() == 0) {
-    // this blob is the source of a graph.
-    for (Node* out : outputs_) {
-      out->inc_in();
-    }
-  } else {
+  if (!inputs_.empty()) {
     // record cudaevent if outputs are in different thread as in input.
     // and inputs are executed in GPU.
     int device = static_cast<Op_*>(inputs_[0])->device();
