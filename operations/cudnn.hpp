@@ -6,6 +6,7 @@
 
 #include "common/common.hpp"
 #include "common/cuda.hpp"
+#include "common/cudnn_v1.hpp"
 #include "operations/size.hpp"
 
 using namespace purine;
@@ -59,6 +60,37 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool,
   CUDNN_CHECK(cudnnCreatePoolingDescriptor(pool));
   CUDNN_CHECK(cudnnSetPooling2dDescriptor(*pool, mode, h, w, pad_h, pad_w,
           stride_h, stride_w));
+}
+
+template <typename Dtype>
+inline void createTensor4dDescV1(cudnnTensorDescriptor_t* desc, Size size,
+    Stride stride) {
+  CUDNN_CHECK(cudnn_v1::cudnnCreateTensor4dDescriptor(desc));
+  CUDNN_CHECK(cudnn_v1::cudnnSetTensor4dDescriptorEx(*desc,
+          dataType<Dtype>::type, size.num(), size.channels(), size.height(),
+          size.width(), stride.nstride(), stride.cstride(), stride.hstride(),
+          stride.wstride()));
+}
+
+template <typename Dtype>
+inline void createTensor4dDescV1(cudnnTensorDescriptor_t* desc, Size size) {
+  createTensor4dDesc<Dtype>(desc, size, Stride(size));
+}
+
+template <typename Dtype>
+inline void createFilterDescV1(cudnnFilterDescriptor_t* desc, Size size) {
+  CUDNN_CHECK(cudnn_v1::cudnnCreateFilterDescriptor(desc));
+  CUDNN_CHECK(cudnn_v1::cudnnSetFilterDescriptor(*desc, dataType<Dtype>::type,
+          size.num(), size.channels(), size.height(), size.width()));
+}
+
+template <typename Dtype>
+inline void createConvolutionDescV1(cudnnConvolutionDescriptor_t* conv,
+    cudnnTensorDescriptor_t bottom, cudnnFilterDescriptor_t filter,
+    int pad_h, int pad_w, int stride_h, int stride_w) {
+  CUDNN_CHECK(cudnn_v1::cudnnCreateConvolutionDescriptor(conv));
+  CUDNN_CHECK(cudnn_v1::cudnnSetConvolutionDescriptor(*conv, bottom, filter,
+      pad_h, pad_w, stride_h, stride_w, 1, 1, CUDNN_CROSS_CORRELATION));
 }
 
 }  // namespace cudnn

@@ -3,7 +3,6 @@
 
 namespace purine {
 
-// Update cudnn R2
 Conv::Conv(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
     const param_tuple& args) : Operation(inputs, outputs) {
   std::tie(pad_h, pad_w, stride_h, stride_w) = args;
@@ -14,7 +13,6 @@ Conv::Conv(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
   Size top_size = outputs_[0]->size();
   Stride top_stride = outputs_[0]->stride();
   Size kernel_size = inputs_[1]->size();
-
   CHECK_EQ(bottom_size.num(), top_size.num());
   CHECK_EQ(bottom_size.channels(), kernel_size.channels());
   CHECK_EQ(kernel_size.num(), top_size.channels());
@@ -22,39 +20,26 @@ Conv::Conv(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
       / stride_h + 1, top_size.height());
   CHECK_EQ((bottom_size.width() + 2 * pad_w - kernel_size.width())
       / stride_w + 1, top_size.width());
-  cudnn::createTensor4dDesc<DTYPE>(&bottom_desc_, bottom_size, bottom_stride);
-  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size, top_stride);
-  cudnn::createFilterDesc<DTYPE>(&filter_desc_, kernel_size);
-  cudnn::createConvolutionDesc<DTYPE>(&conv_desc_, pad_h, pad_w, stride_h,
-      stride_w);
-  CUDNN_CHECK(cudnnGetConvolutionForwardAlgorithm(cudnn_handle(), bottom_desc_,
-          filter_desc_, conv_desc_, top_desc_,
-          CUDNN_CONVOLUTION_FWD_PREFER_FASTEST, 0, &algo_));
-  CUDNN_CHECK(cudnnGetConvolutionForwardWorkspaceSize(cudnn_handle(),
-          bottom_desc_, filter_desc_, conv_desc_, top_desc_, algo_,
-          &workspace_size_));
+  cudnn::createTensor4dDescV1<DTYPE>(&bottom_desc_, bottom_size, bottom_stride);
+  cudnn::createTensor4dDescV1<DTYPE>(&top_desc_, top_size, top_stride);
+  cudnn::createFilterDescV1<DTYPE>(&filter_desc_, kernel_size);
+  cudnn::createConvolutionDescV1<DTYPE>(&conv_desc_, bottom_desc_, filter_desc_,
+      pad_h, pad_w, stride_h, stride_w);
 }
 
 Conv::~Conv() {
-  CUDNN_CHECK(cudnnDestroyTensorDescriptor(bottom_desc_));
-  CUDNN_CHECK(cudnnDestroyTensorDescriptor(top_desc_));
-  CUDNN_CHECK(cudnnDestroyFilterDescriptor(filter_desc_));
-  CUDNN_CHECK(cudnnDestroyConvolutionDescriptor(conv_desc_));
+  CUDNN_CHECK(cudnn_v1::cudnnDestroyTensor4dDescriptor(bottom_desc_));
+  CUDNN_CHECK(cudnn_v1::cudnnDestroyTensor4dDescriptor(top_desc_));
+  CUDNN_CHECK(cudnn_v1::cudnnDestroyFilterDescriptor(filter_desc_));
+  CUDNN_CHECK(cudnn_v1::cudnnDestroyConvolutionDescriptor(conv_desc_));
 }
 
 void Conv::compute_gpu(const vector<bool>& add) {
-  if (!workspace_ && workspace_size_ != 0) {
-    int device;
-    CUDA_CHECK(cudaGetDevice(&device));
-    workspace_.reset(new Tensor(current_rank(), device,
-            {1, 1, 1, workspace_size_}));
-  }
-  DTYPE alpha = 1.;
-  DTYPE beta = add[0] ? 1. : 0.;
-  CUDNN_CHECK(cudnnConvolutionForward(cudnn_handle(), &alpha, bottom_desc_,
+  CUDNN_CHECK(cudnn_v1::cudnnConvolutionForward(cudnnv1_handle(), bottom_desc_,
           inputs_[0]->gpu_data(), filter_desc_, inputs_[1]->gpu_data(),
-          conv_desc_, algo_, workspace_ ? workspace_->mutable_gpu_data() : 0,
-          workspace_size_, &beta, top_desc_, outputs_[0]->mutable_gpu_data()));
+          conv_desc_, top_desc_, outputs_[0]->mutable_gpu_data(), add[0] ?
+          cudnn_v1::CUDNN_RESULT_ACCUMULATE :
+          cudnn_v1::CUDNN_RESULT_NO_ACCUMULATE));
 }
 
 ConvDown::ConvDown(const vector<Tensor*>& inputs,
@@ -73,29 +58,28 @@ ConvDown::ConvDown(const vector<Tensor*>& inputs,
       / stride_h + 1, top_size.height());
   CHECK_EQ((bottom_size.width() + 2 * pad_w - kernel_size.width())
       / stride_w + 1, top_size.width());
-  cudnn::createTensor4dDesc<DTYPE>(&bottom_desc_, bottom_size, bottom_stride);
-  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size, top_stride);
-  cudnn::createFilterDesc<DTYPE>(&filter_desc_, kernel_size);
-  cudnn::createConvolutionDesc<DTYPE>(&conv_desc_, pad_h, pad_w, stride_h,
-      stride_w);
+  cudnn::createTensor4dDescV1<DTYPE>(&bottom_desc_, bottom_size, bottom_stride);
+  cudnn::createTensor4dDescV1<DTYPE>(&top_desc_, top_size, top_stride);
+  cudnn::createFilterDescV1<DTYPE>(&filter_desc_, kernel_size);
+  cudnn::createConvolutionDescV1<DTYPE>(&conv_desc_, bottom_desc_, filter_desc_,
+      pad_h, pad_w, stride_h, stride_w);
 }
 
 ConvDown::~ConvDown() {
-  CUDNN_CHECK(cudnnDestroyTensorDescriptor(bottom_desc_));
-  CUDNN_CHECK(cudnnDestroyTensorDescriptor(top_desc_));
-  CUDNN_CHECK(cudnnDestroyFilterDescriptor(filter_desc_));
-  CUDNN_CHECK(cudnnDestroyConvolutionDescriptor(conv_desc_));
+  CUDNN_CHECK(cudnn_v1::cudnnDestroyTensor4dDescriptor(bottom_desc_));
+  CUDNN_CHECK(cudnn_v1::cudnnDestroyTensor4dDescriptor(top_desc_));
+  CUDNN_CHECK(cudnn_v1::cudnnDestroyFilterDescriptor(filter_desc_));
+  CUDNN_CHECK(cudnn_v1::cudnnDestroyConvolutionDescriptor(conv_desc_));
 }
 
 void ConvDown::compute_gpu(const vector<bool>& add) {
   const DTYPE* weight_data = inputs_[1]->gpu_data();
   const DTYPE* top_diff = inputs_[0]->gpu_data();
   DTYPE* bottom_diff = outputs_[0]->mutable_gpu_data();
-  DTYPE alpha = 1.;
-  DTYPE beta = add[0] ? 1. : 0.;
-  CUDNN_CHECK(cudnnConvolutionBackwardData(cudnn_handle(), &alpha,
-          filter_desc_, weight_data, top_desc_, top_diff, conv_desc_, &beta,
-          bottom_desc_, bottom_diff));
+  CUDNN_CHECK(cudnn_v1::cudnnConvolutionBackwardData(cudnnv1_handle(), filter_desc_,
+          weight_data, top_desc_, top_diff, conv_desc_, bottom_desc_,
+          bottom_diff, add[0] ? cudnn_v1::CUDNN_RESULT_ACCUMULATE :
+          cudnn_v1::CUDNN_RESULT_NO_ACCUMULATE));
 }
 
 ConvWeight::ConvWeight(const vector<Tensor*>& inputs,
@@ -114,29 +98,28 @@ ConvWeight::ConvWeight(const vector<Tensor*>& inputs,
       / stride_h + 1, top_size.height());
   CHECK_EQ((bottom_size.width() + 2 * pad_w - kernel_size.width())
       / stride_w + 1, top_size.width());
-  cudnn::createTensor4dDesc<DTYPE>(&bottom_desc_, bottom_size, bottom_stride);
-  cudnn::createTensor4dDesc<DTYPE>(&top_desc_, top_size, top_stride);
-  cudnn::createFilterDesc<DTYPE>(&filter_desc_, kernel_size);
-  cudnn::createConvolutionDesc<DTYPE>(&conv_desc_, pad_h, pad_w, stride_h,
-      stride_w);
+  cudnn::createTensor4dDescV1<DTYPE>(&bottom_desc_, bottom_size, bottom_stride);
+  cudnn::createTensor4dDescV1<DTYPE>(&top_desc_, top_size, top_stride);
+  cudnn::createFilterDescV1<DTYPE>(&filter_desc_, kernel_size);
+  cudnn::createConvolutionDescV1<DTYPE>(&conv_desc_, bottom_desc_, filter_desc_,
+      pad_h, pad_w, stride_h, stride_w);
 }
 
 ConvWeight::~ConvWeight() {
-  CUDNN_CHECK(cudnnDestroyTensorDescriptor(bottom_desc_));
-  CUDNN_CHECK(cudnnDestroyTensorDescriptor(top_desc_));
-  CUDNN_CHECK(cudnnDestroyFilterDescriptor(filter_desc_));
-  CUDNN_CHECK(cudnnDestroyConvolutionDescriptor(conv_desc_));
+  CUDNN_CHECK(cudnn_v1::cudnnDestroyTensor4dDescriptor(bottom_desc_));
+  CUDNN_CHECK(cudnn_v1::cudnnDestroyTensor4dDescriptor(top_desc_));
+  CUDNN_CHECK(cudnn_v1::cudnnDestroyFilterDescriptor(filter_desc_));
+  CUDNN_CHECK(cudnn_v1::cudnnDestroyConvolutionDescriptor(conv_desc_));
 }
 
 void ConvWeight::compute_gpu(const vector<bool>& add) {
   const DTYPE* top_diff = inputs_[0]->gpu_data();
   const DTYPE* bottom_data = inputs_[1]->gpu_data();
   DTYPE* weight_diff = outputs_[0]->mutable_gpu_data();
-  DTYPE alpha = 1.;
-  DTYPE beta = add[0] ? 1. : 0.;
-  CUDNN_CHECK(cudnnConvolutionBackwardFilter(cudnn_handle(), &alpha,
-          bottom_desc_, bottom_data, top_desc_, top_diff, conv_desc_, &beta,
-          filter_desc_, weight_diff));
+  CUDNN_CHECK(cudnn_v1::cudnnConvolutionBackwardFilter(cudnnv1_handle(),
+          bottom_desc_, bottom_data, top_desc_, top_diff, conv_desc_,
+          filter_desc_, weight_diff, add[0] ? cudnn_v1::CUDNN_RESULT_ACCUMULATE
+          : cudnn_v1::CUDNN_RESULT_NO_ACCUMULATE));
 }
 
 }

@@ -19,9 +19,6 @@ class Conv : public Operation {
   cudnnTensorDescriptor_t top_desc_ = NULL;
   cudnnFilterDescriptor_t filter_desc_ = NULL;
   cudnnConvolutionDescriptor_t conv_desc_ = NULL;
-  cudnnConvolutionFwdAlgo_t algo_ = (cudnnConvolutionFwdAlgo_t)NULL;
-  size_t workspace_size_ = 0;
-  shared_ptr<Tensor> workspace_;
  public:
   typedef tuple<int, int, int, int> param_tuple;
   explicit Conv(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
