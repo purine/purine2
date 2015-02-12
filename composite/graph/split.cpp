@@ -32,25 +32,29 @@ void Split::setup() {
     CHECK_EQ(sum, bottom_[0]->tensor()->size().channels());
   }
 
-  // create sliced blobs from bottom
-  Size bottom_size = bottom_[0]->tensor()->size();
-  bottom_[0]->tensor()->mutable_data();
-  int off = 0;
-  if (dim == DIM::NUM) {
-    for (int i = 0; i < dims.size(); ++i) {
-      Size tmp_size = { dims[i], bottom_size.channels(), bottom_size.height(),
-                        bottom_size.width() };
-      Offset tmp_offset = { off, 0, 0, 0 };
-      off += dims[i];
-      top_[i]->tensor()->slice_from(bottom_[0]->tensor(), tmp_offset, tmp_size);
-    }
-  } else {
-    for (int i = 0; i < dims.size(); ++i) {
-      Size tmp_size = { bottom_size.num(), dims[i], bottom_size.height(),
-                        bottom_size.width() };
-      Offset tmp_offset = { 0, off, 0, 0 };
-      off += dims[i];
-      top_[i]->tensor()->slice_from(bottom_[0]->tensor(), tmp_offset, tmp_size);
+  if (current_rank() == rank_) {
+    // create sliced blobs from bottom
+    Size bottom_size = bottom_[0]->tensor()->size();
+    bottom_[0]->tensor()->mutable_data();
+    int off = 0;
+    if (dim == DIM::NUM) {
+      for (int i = 0; i < dims.size(); ++i) {
+        Size tmp_size = { dims[i], bottom_size.channels(), bottom_size.height(),
+                          bottom_size.width() };
+        Offset tmp_offset = { off, 0, 0, 0 };
+        off += dims[i];
+        top_[i]->tensor()->slice_from(bottom_[0]->tensor(),
+            tmp_offset, tmp_size);
+      }
+    } else {
+      for (int i = 0; i < dims.size(); ++i) {
+        Size tmp_size = { bottom_size.num(), dims[i], bottom_size.height(),
+                          bottom_size.width() };
+        Offset tmp_offset = { 0, off, 0, 0 };
+        off += dims[i];
+        top_[i]->tensor()->slice_from(bottom_[0]->tensor(),
+            tmp_offset, tmp_size);
+      }
     }
   }
   // create op

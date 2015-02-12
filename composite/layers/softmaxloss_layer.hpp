@@ -20,8 +20,6 @@ class SoftmaxLossLayer : public Layer {
       create("loss", rank_, -1, {1, 1, 1, 1}),
       create("loss_diff", rank_, -1, {1, 1, 1, 1})
     };
-    // set loss_scale
-    loss_[1]->tensor()->mutable_cpu_data()[0] = -1 * loss_scale;
     top_setup_ = true;
   }
   virtual ~SoftmaxLossLayer() override {}
@@ -34,6 +32,11 @@ class SoftmaxLossLayer : public Layer {
 
     // check top, softmaxloss has no top.
     CHECK_EQ(top_.size(), 0);
+
+    if (current_rank() == rank_) {
+      // set loss_scale
+      loss_[1]->tensor()->mutable_cpu_data()[0] = -1 * loss_scale;
+    }
 
     // create ops
     Op<Softmax>* softmax = create<Softmax>("softmax", "main",

@@ -37,21 +37,23 @@ void Concat::setup() {
       create("top", expected_top_size)
     };
   }
-  top_[0]->tensor()->mutable_data();
 
-  // create sliced blobs from top
-  int off = 0;
-  if (dim == Split::DIM::NUM) {
-    for (int i = 0; i < bottom_.size(); ++i) {
-      bottom_[i]->tensor()->slice_from(top_[0]->tensor(), { off, 0, 0, 0},
-          bottom_[i]->tensor()->size());
-      off += bottom_[i]->tensor()->size().num();
-    }
-  } else {
-    for (int i = 0; i < bottom_.size(); ++i) {
-      bottom_[i]->tensor()->slice_from(top_[0]->tensor(), { 0, off, 0, 0},
-          bottom_[i]->tensor()->size());
-      off += bottom_[i]->tensor()->size().channels();
+  if (current_rank() == rank_) {
+    top_[0]->tensor()->mutable_data();
+    // create sliced blobs from top
+    int off = 0;
+    if (dim == Split::DIM::NUM) {
+      for (int i = 0; i < bottom_.size(); ++i) {
+        bottom_[i]->tensor()->slice_from(top_[0]->tensor(), { off, 0, 0, 0},
+            bottom_[i]->tensor()->size());
+        off += bottom_[i]->tensor()->size().num();
+      }
+    } else {
+      for (int i = 0; i < bottom_.size(); ++i) {
+        bottom_[i]->tensor()->slice_from(top_[0]->tensor(), { 0, off, 0, 0},
+            bottom_[i]->tensor()->size());
+        off += bottom_[i]->tensor()->size().channels();
+      }
     }
   }
   // create op
