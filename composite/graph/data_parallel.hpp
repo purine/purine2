@@ -63,11 +63,15 @@ vector<DTYPE> DataParallel<Net>::loss() {
   }
   // run the compute loss graph
   compute_loss_->run();
-  vector<DTYPE> ret(loss_.size());
-  transform(loss_.begin(), loss_.end(), ret.begin(), [](Blob* b)->DTYPE {
-        return b->tensor()->cpu_data()[0];
-      });
-  return ret;
+  if (current_rank() == rank_) {
+    vector<DTYPE> ret(loss_.size());
+    transform(loss_.begin(), loss_.end(), ret.begin(), [](Blob* b)->DTYPE {
+          return b->tensor()->cpu_data()[0];
+        });
+    return ret;
+  } else {
+    return {};
+  }
 }
 
 template <typename Net>
