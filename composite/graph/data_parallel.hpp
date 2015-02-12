@@ -34,6 +34,7 @@ class DataParallel : public Runnable {
   void print_weight_diff_l1();
   void print_weight_l1();
   void feed(const vector<Blob*>& data, const vector<Blob*>& labels);
+  virtual void run() override;
 };
 
 template <typename Net>
@@ -226,6 +227,22 @@ void DataParallel<Net>::feed(const vector<Blob*>& data,
   for (int i = 0; i < labels.size(); ++i) {
     if (current_rank() == labels_[i]->rank()) {
       labels_[i]->tensor()->swap_memory(labels[i]->tensor());
+    }
+  }
+}
+
+template <typename Net>
+void DataParallel<Net>::run() {
+  // run and sync
+  run_async();
+  sync();
+  // update the weights
+  for (int i = 0; i < nets_.size(); ++i) {
+    if (nets_[i]->rank() == current_rank()) {
+      for (int j = 0; j < nets_.size(); ++j) {
+        new_weights_[i][j]->tensor()->
+            swap_memory(nets_weight_data_[i][j]->tensor());
+      }
     }
   }
 }

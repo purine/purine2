@@ -58,7 +58,7 @@ class Runnable : public Graph {
   inline SinkCounter& sink_counter() { return sink_counter_; }
 
   Loop& task_loop(int device, const string& thread);
-  void run();
+  virtual void run();
   void run_async();
   void sync();
   vector<Node*> sources();
