@@ -42,6 +42,7 @@ class WeightedSum : public Operation {
       const vector<Tensor*>& outputs, const param_tuple& args);
   virtual void compute_cpu(const vector<bool>& add);
   virtual void compute_gpu(const vector<bool>& add);
+  inline void set_weights(const vector<DTYPE>& w) { weights = w; }
 };
 
 /**

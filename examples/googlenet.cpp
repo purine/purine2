@@ -146,7 +146,7 @@ int main(int argc, char** argv) {
   parallel_googlenet->init<Gaussian>({0, 4, 114, 110, 106, 98, 94},
       Gaussian::param_tuple(0., 0.01));
   // iteration
-  for (int iter = 0; iter < 10000; ++iter) {
+  for (int iter = 1; iter <= 10000; ++iter) {
     // feed prefetched data to googlenet
     parallel_googlenet->feed(fetch->images(), fetch->labels());
     // start googlenet and next fetch
@@ -154,12 +154,14 @@ int main(int argc, char** argv) {
     fetch->run_async();
     fetch->sync();
     parallel_googlenet->sync();
+    // verbose
+    vector<DTYPE> loss = parallel_googlenet->loss();
+    MPI_LOG( << "iteration: " << iter << ", loss: " << loss[0]);
     if (iter % 10 == 0) {
-      vector<DTYPE> loss = parallel_googlenet->loss();
-      MPI_LOG( << "iteration: " << iter << ", loss: " << loss[0]);
       parallel_googlenet->print_weight_diff_l1();
     }
   }
+  // delete
   fetch.reset();
   parallel_googlenet.reset();
   // Finalize MPI

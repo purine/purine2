@@ -58,7 +58,7 @@ vector<DTYPE> DataParallel<Net>::loss() {
     }
     net_losses >> *(compute_loss_->createAny<Vectorize<Aggregate> >(
         "agg_loss", vector<Aggregate::param_tuple>(loss_count,
-            Aggregate::param_tuple(Aggregate::AVERAGE, 0, 0))))
+            Aggregate::param_tuple(Aggregate::AVERAGE, rank_, device_))))
     >> vector<vector<Blob*> >{ loss_ };
   }
   // run the compute loss graph
@@ -86,8 +86,11 @@ void DataParallel<Net>::print_weight_diff_l1() {
         abs_sum += abs(data[i]);
       }
       abs_sum /= b->tensor()->size().count();
-      LOG(INFO) << std::left << std::setw(max_len + 1) << std::setfill(' ') <<
-          nets_weight_data_[0][i]->cached_name() << "[" << abs_sum << "]";
+      const string& name = nets_weight_data_[0][i]->cached_name();
+      size_t pos = name.find("::");
+      LOG(INFO) << std::left << std::setw(max_len - pos + 1) <<
+          std::setfill(' ') << name.substr(pos + 2) << std::scientific <<
+          "[" << abs_sum << "]";
     }
   }
 }
@@ -118,8 +121,7 @@ void DataParallel<Net>::init(vector<int> index,
   vector<Blob*> tmp(index.size());
   vector<vector<Blob*> > weights(nets_.size());
   for (int i = 0; i < index.size(); ++i) {
-    tmp[i] = initializer.create("tmp",
-        nets_weight_data_[0][index[i]]->tensor()->size());
+    tmp[i] = initializer.create("tmp", weight_[index[i]]->shared_tensor());
   }
   for (int i = 0; i < nets_weight_data_.size(); ++i) {
     weights[i] = vector<Blob*>(index.size());
@@ -195,7 +197,7 @@ DataParallel<Net>::DataParallel(const vector<pair<int, int> >& locations,
       vector<Update::param_tuple>(param_num,
           Update::param_tuple(0.9, 0.01, 0.0005)));
   vector<vector<Blob*> >{ weight_, agg->top()[0], history_ }
-  >> *updator >> vector<vector<Blob*> >{ new_history_, new_weight_ };
+  >> *updator >> vector<vector<Blob*> >{ new_weight_, new_history_ };
 
   // distribute weight
   vector<vector<Blob*> >{ new_weight_ }

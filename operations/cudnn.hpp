@@ -3,7 +3,6 @@
 
 #include <glog/logging.h>
 #include <cudnn.h>
-#include <cudv1.h>
 
 #include "common/common.hpp"
 #include "common/cuda.hpp"
