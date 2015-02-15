@@ -24,19 +24,8 @@ class Connectable : public Graph {
 
   const vector<Blob*>& bottom();
   const vector<Blob*>& top();
-  void set_bottom(const vector<Blob*>& bottom);
-  void set_top(const vector<Blob*>& top);
-};
-
-class ConnectAny : public Connectable {
-  friend ConnectAny& operator >> (Connectable& graph1, ConnectAny& graph2);
-  friend ConnectAny& operator >> (const vector<Blob*>& bottom,
-      ConnectAny& graph);
-  friend const vector<Blob*>& operator >> (ConnectAny& graph,
-      const vector<Blob*>& top);
- public:
-  explicit ConnectAny() {};
-  virtual ~ConnectAny() override {};
+  virtual void set_bottom(const vector<Blob*>& bottom);
+  virtual void set_top(const vector<Blob*>& top);
 };
 
 }

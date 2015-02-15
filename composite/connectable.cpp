@@ -49,62 +49,18 @@ void Connectable::set_bottom(const vector<Blob*>& bottom) {
   }
 }
 
-
-// Connectables, when connect to other connectables,
-// will place a Copy in the middle. So that blobs on different devices or ranks
-// will be moved to the correct place.
-// Except Copy which is also a Connectable. But the operators are overrided.
-
-Connectable& operator >> (const vector<Blob*>& bottom, Connectable& g) {
-  if (any_of(bottom.begin(), bottom.end(), [&](Blob* b)->bool {
-            return (b->rank() != g.rank() || b->device() != g.device());
-          })) {
-    vector<Blob*> b = (vector<B>{ bottom } >>
-        *g.createAny<Vectorize<Copy> >("copy_over",
-            vector<Copy::param_tuple>(bottom.size(),
-                Copy::param_tuple(g.rank(), g.device())))).top()[0];
-    g.set_bottom(b);
-    return g;
-  } else {
-    g.set_bottom(bottom);
-    return g;
-  }
-}
-
-const vector<Blob*>& operator >> (Connectable& g, const vector<Blob*>& top) {
-  vector<Blob*> top_tmp(top.size());
-  transform(top.begin(), top.end(), top_tmp.begin(),
-      [&](Blob* b)->Blob* {
-        if (b->rank() == g.rank() && b->device() == g.device()) {
-          return b;
-        } else {
-          Blob* tmp = g.create("...", g.rank(), g.device(),
-              b->tensor()->size());
-          B{ tmp } >> *g.createAny<Copy>("...", Copy::param_tuple())
-                          >> B{ b };
-          return tmp;
-        }
-      });
-  g.set_top(top_tmp);
-  return top;
-}
-
-Connectable& operator >> (Connectable& g1, Connectable& g2) {
-  return g1.top() >> g2;
-}
-
-ConnectAny& operator >> (Connectable& graph1, ConnectAny& graph2) {
+Connectable& operator >> (Connectable& graph1, Connectable& graph2) {
   graph2.set_bottom(graph1.top());
   return graph2;
 }
 
-ConnectAny& operator >> (const vector<Blob*>& bottom,
-    ConnectAny& graph) {
+Connectable& operator >> (const vector<Blob*>& bottom,
+    Connectable& graph) {
   graph.set_bottom(bottom);
   return graph;
 }
 
-const vector<Blob*>& operator >> (ConnectAny& graph,
+const vector<Blob*>& operator >> (Connectable& graph,
     const vector<Blob*>& top) {
   graph.set_top(top);
   return top;

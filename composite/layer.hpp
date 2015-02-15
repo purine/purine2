@@ -7,10 +7,6 @@
 namespace purine {
 
 class Layer : public Connectable {
-  friend Layer& operator >> (Layer& layer1, Layer& layer2);
-  friend Layer& operator >> (const vector<Blob*>& bottom, Layer& layer);
-  friend const vector<Blob*>& operator >> (Layer& layer,
-      const vector<Blob*>& top);
  protected:
   vector<Blob*> weight_;
   vector<Blob*> loss_;
@@ -31,6 +27,8 @@ class Layer : public Connectable {
   vector<Blob*> top_diff();
 
   virtual vector<Blob*> weight(int index);
+  virtual void set_bottom(const vector<Blob*>& bottom) override;
+  virtual void set_top(const vector<Blob*>& top) override;
 };
 
 }

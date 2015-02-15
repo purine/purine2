@@ -19,7 +19,7 @@ Copy& operator >> (Copy& copy1, Copy& copy2) = delete;
  * copy's rank_ and device_ denotes the output location
  * rank and device are not required
  */
-class Copy : public ConnectAny {
+class Copy : public Connectable {
   // friend Connectable& operator >> (Copy& copy, Connectable& graph);
   // friend Copy& operator >> (Connectable& graph, Copy& copy);
   // friend Copy& operator >> (const vector<Blob*>& inputs, Copy& copy);
@@ -40,7 +40,7 @@ class Copy : public ConnectAny {
  * { src1 } >> distribute >> { destA, destB, ... }
  * rank and device are not required
  */
-class Distribute : public ConnectAny {
+class Distribute : public Connectable {
  protected:
   vector<pair<int, int> > rank_device;
  public:
@@ -57,7 +57,7 @@ class Distribute : public ConnectAny {
  * { blob1, blob2, ... } >> agg >> { dest }
  * rank and device are not required.
  */
-class Aggregate : public ConnectAny {
+class Aggregate : public Connectable {
  public:
   enum Type {
     SUM,
