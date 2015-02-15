@@ -35,7 +35,7 @@ class SoftmaxLossLayer : public Layer {
 
     if (current_rank() == rank_) {
       // set loss_scale
-      loss_[1]->tensor()->mutable_cpu_data()[0] = -1 * loss_scale;
+      loss_[1]->tensor()->mutable_cpu_data()[0] = loss_scale;
     }
 
     // create ops
