@@ -31,8 +31,6 @@ class Layer : public Connectable {
   vector<Blob*> top_diff();
 
   virtual vector<Blob*> weight(int index);
-  virtual vector<Blob*> bottom(int index) override;
-  virtual vector<Blob*> top(int index) override;
 };
 
 }

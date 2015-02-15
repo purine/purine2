@@ -58,19 +58,6 @@ vector<Blob*> Layer::top_diff() {
   return second_half<Blob*>(top_);
 }
 
-vector<Blob*> Layer::bottom(int index) {
-  CHECK_EQ(bottom_.size() % 2, 0);
-  CHECK_LT(index, bottom_.size() / 2);
-  int middle = bottom_.size() / 2;
-  return { bottom_[index], bottom_[middle + index] };
-}
-
-vector<Blob*> Layer::top(int index) {
-  CHECK_EQ(top_.size() % 2, 0);
-  CHECK_LT(index, top_.size() / 2);
-  int middle = top_.size() / 2;
-  return { top_[index], top_[middle + index] };
-}
 
 Layer& operator >> (Layer& layer1, Layer& layer2) {
   if (layer1.rank() == layer2.rank() && layer1.device() == layer2.device()) {

@@ -49,15 +49,6 @@ void Connectable::set_bottom(const vector<Blob*>& bottom) {
   }
 }
 
-vector<Blob*> Connectable::bottom(int index) {
-  CHECK_LT(index, bottom_.size());
-  return { bottom_[index] };
-}
-
-vector<Blob*> Connectable::top(int index) {
-  CHECK_LT(index, top_.size());
-  return { top_[index] };
-}
 
 // Connectables, when connect to other connectables,
 // will place a Copy in the middle. So that blobs on different devices or ranks

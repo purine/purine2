@@ -26,9 +26,6 @@ class Connectable : public Graph {
   const vector<Blob*>& top();
   void set_bottom(const vector<Blob*>& bottom);
   void set_top(const vector<Blob*>& top);
-
-  virtual vector<Blob*> bottom(int index);
-  virtual vector<Blob*> top(int index);
 };
 
 class ConnectAny : public Connectable {
