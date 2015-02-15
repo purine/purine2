@@ -59,8 +59,8 @@ class Runnable : public Graph {
 
   Loop& task_loop(int device, const string& thread);
   virtual void run();
-  void run_async();
-  void sync();
+  virtual void run_async();
+  virtual void sync();
   vector<Node*> sources();
   vector<Node*> sinks();
   vector<vector<string> > print();

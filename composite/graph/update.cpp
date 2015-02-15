@@ -1,6 +1,7 @@
 // Copyright Lin Min 2015
 #include "composite/graph/update.hpp"
 #include "operations/include/dummy.hpp"
+
 namespace purine {
 
 void Update::setup() {
@@ -20,9 +21,8 @@ void Update::setup() {
   // 'update' shares tensor from new_history
   Blob* update = create("update", top_[1]->shared_tensor());
   // create ops
-  Op<WeightedSum>* compute_update = create<WeightedSum>("compute_update",
-      "main",
-      WeightedSum::param_tuple({momentum, learning_rate, weight_decay}));
+  compute_update = create<WeightedSum>("compute_update", "main",
+      WeightedSum::param_tuple({momentum_, learning_rate_, weight_decay_}));
 
   Op<WeightedSum>* apply_update = create<WeightedSum>("apply_update", "main",
       WeightedSum::param_tuple({1., -1.}));

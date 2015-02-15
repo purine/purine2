@@ -4,6 +4,7 @@
 #include "common/common.hpp"
 #include "dispatch/runnable.hpp"
 #include "composite/composite.hpp"
+#include "composite/graph/all_reduce.hpp"
 
 namespace purine {
 
@@ -124,9 +125,19 @@ int main(int argc, char** argv) {
       true, true, true, batch_size, 224, parallels);
   fetch->run();
   // create data parallelism of GoogLeNet;
-  shared_ptr<DataParallel<GoogLeNet> > parallel_googlenet
-      = make_shared<DataParallel<GoogLeNet> >(parallels, param_server);
-  // print_graph(parallel_googlenet->print());
+  shared_ptr<DataParallel<GoogLeNet, AllReduce> > parallel_googlenet
+      = make_shared<DataParallel<GoogLeNet, AllReduce> >(parallels);
+  // set learning rate etc
+  DTYPE global_learning_rate = 0.04;
+  DTYPE global_decay = 0.0001;
+  vector<AllReduce::param_tuple> param(116);
+  for (int i = 0; i < 116; ++i) {
+    param[i] = AllReduce::param_tuple(0.9,
+        global_learning_rate * (i % 2 ? 2. : 1.),
+        global_decay * (i % 2 ? 1. : 0.));
+  }
+  parallel_googlenet->setup_param_server(vector<int>(116, 0),
+      vector<int>(116, -1), param);
   // do the initialization
   vector<int> indice(58);
   iota(indice.begin(), indice.end(), 0);
@@ -158,7 +169,7 @@ int main(int argc, char** argv) {
     vector<DTYPE> loss = parallel_googlenet->loss();
     MPI_LOG( << "iteration: " << iter << ", loss: " << loss[0]);
     if (iter % 10 == 0) {
-      parallel_googlenet->print_weight_diff_l1();
+      parallel_googlenet->print_weight_info();
     }
   }
   // delete

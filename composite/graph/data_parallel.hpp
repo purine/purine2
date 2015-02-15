@@ -9,130 +9,106 @@ using namespace std;
 
 namespace purine {
 
-template <typename Net>
+template <typename Net, typename PS>
 class DataParallel : public Runnable {
  protected:
   vector<Net*> nets_;
-  vector<Blob*> weight_;
-  vector<Blob*> new_weight_;
-  vector<Blob*> history_;
-  vector<Blob*> new_history_;
-  vector<vector<Blob*> > nets_weight_data_;
-  vector<vector<Blob*> > nets_weight_diff_;
-  vector<vector<Blob*> > new_weights_;
-  shared_ptr<Runnable> compute_loss_;
-  vector<Blob*> loss_;
+  Vectorize<PS>* param_server_;
   vector<Blob*> data_;
   vector<Blob*> labels_;
+  vector<Blob*> loss_;
+  vector<vector<Blob*> > new_weights_;
+  vector<vector<Blob*> > weights_;
  public:
-  DataParallel(const vector<pair<int, int> >& locations,
-      const pair<int, int>& param_server);
+  DataParallel(const vector<pair<int, int> >& locations);
   virtual ~DataParallel() override {};
   template <typename Random>
   void init(vector<int> index, const typename Random::param_tuple& args);
   vector<DTYPE> loss();
-  void print_weight_diff_l1();
-  void print_weight_l1();
+  void print_weight_info();
   void feed(const vector<Blob*>& data, const vector<Blob*>& labels);
-  virtual void run() override;
+  virtual void sync() override;
+
+  template <typename... Args>
+  void setup_param_server(const Args&... args) {
+    vector<vector<Blob*> > weight_diff(nets_.size());
+    for (int i = 0; i < nets_.size(); ++i) {
+      weight_diff[i] = nets_[i]->weight_diff();
+    }
+    param_server_ = createAny<Vectorize<PS> >("param_server", args...);
+    weight_diff >> *param_server_;
+    new_weights_ = param_server_->top();
+  }
 };
 
-template <typename Net>
-vector<DTYPE> DataParallel<Net>::loss() {
-  if (!compute_loss_) {
-    // compute_loss
-    int loss_count = nets_[0]->loss().size();
-    compute_loss_.reset(new Runnable(rank_, device_));
-    loss_ = vector<Blob*>(loss_count);
-    for_each(loss_.begin(), loss_.end(), [this](Blob*& blob){
-          blob = compute_loss_->create("[loss]", rank_, -1, {1, 1, 1, 1});
-        });
-    vector<vector<Blob*> > net_losses(nets_.size());
-    for (int i = 0; i < nets_.size(); ++i) {
-      const vector<Blob*>& l = nets_[i]->loss();
-      net_losses[i] = vector<Blob*>(loss_count);
-      for (int j = 0; j < l.size(); ++j) {
-        net_losses[i][j] = compute_loss_->create("loss",
-            l[j]->shared_tensor());
-      }
-    }
-    net_losses >> *(compute_loss_->createAny<Vectorize<Aggregate> >(
-        "agg_loss", vector<Aggregate::param_tuple>(loss_count,
-            Aggregate::param_tuple(Aggregate::AVERAGE, rank_, device_))))
-    >> vector<vector<Blob*> >{ loss_ };
-  }
-  // run the compute loss graph
-  compute_loss_->run();
-  if (current_rank() == rank_) {
-    vector<DTYPE> ret(loss_.size());
-    transform(loss_.begin(), loss_.end(), ret.begin(), [](Blob* b)->DTYPE {
-          return b->tensor()->cpu_data()[0];
-        });
-    return ret;
-  } else {
-    return {};
-  }
+template <typename Net, typename PS>
+vector<DTYPE> DataParallel<Net, PS>::loss() {
+  CHECK_EQ(current_rank(), 0);
+  vector<DTYPE> ret(loss_.size());
+  transform(loss_.begin(), loss_.end(), ret.begin(), [](Blob* b)->DTYPE {
+        return b->tensor()->cpu_data()[0];
+      });
+  return ret;
 }
 
-template <typename Net>
-void DataParallel<Net>::print_weight_diff_l1() {
+template <typename Net, typename PS>
+void DataParallel<Net, PS>::print_weight_info() {
   if (current_rank() == this->rank_) {
+    const vector<Blob*>& weight = nets_[0]->weight_data();
     int max_len = 0;
-    for (int i = 0; i < history_.size(); ++i) {
-      int len = nets_weight_data_[0][i]->cached_name().length();
+    for (int i = 0; i < weight.size(); ++i) {
+      int len = weight[i]->cached_name().length();
       max_len = max_len > len ? max_len : len;
     }
-    for (int i = 0; i < history_.size(); ++i) {
-      Blob* b = history_[i];
-      DTYPE abs_sum = 0;
-      const DTYPE* data = b->tensor()->cpu_data();
-      for (int i = 0; i < b->tensor()->size().count(); ++i) {
-        abs_sum += abs(data[i]);
+    for (int i = 0; i < param_server_->size(); ++i) {
+      shared_ptr<Tensor> h = param_server_->element(i)->history();
+      shared_ptr<Tensor> w = param_server_->element(i)->weight();
+      // shared_ptr<Tensor> h = param_server_->element(i)->weight_diff();
+      DTYPE h_abs_sum = 0;
+      const DTYPE* data = h->cpu_data();
+      for (int j = 0; j < h->size().count(); ++j) {
+        h_abs_sum += abs(data[j]);
       }
-      abs_sum /= b->tensor()->size().count();
-      const string& name = nets_weight_data_[0][i]->cached_name();
+      h_abs_sum /= h->size().count();
+      DTYPE w_abs_sum = 0;
+      data = w->cpu_data();
+      for (int j = 0; j < w->size().count(); ++j) {
+        w_abs_sum += abs(data[j]);
+      }
+      w_abs_sum /= w->size().count();
+
+      const string& name = weight[i]->cached_name();
       size_t pos = name.find("::");
       LOG(INFO) << std::left << std::setw(max_len - pos + 1) <<
           std::setfill(' ') << name.substr(pos + 2) << std::scientific <<
-          "[" << abs_sum << "]";
+          "(" << w_abs_sum << ") " << " [" << h_abs_sum << "]";
     }
   }
 }
 
-template <typename Net>
-void DataParallel<Net>::print_weight_l1() {
-  if (current_rank() == this->rank_) {
-    for (int i = 0; i < weight_.size(); ++i) {
-      Blob* b = weight_[i];
-      DTYPE abs_sum = 0;
-      const DTYPE* data = b->tensor()->cpu_data();
-      for (int i = 0; i < b->tensor()->size().count(); ++i) {
-        abs_sum += abs(data[i]);
-      }
-      abs_sum /= b->tensor()->size().count();
-      LOG(INFO) << nets_weight_data_[0][i]->cached_name()
-      << "(" << abs_sum << ")";
-    }
-  }
-}
-
-template <typename Net>
+template <typename Net, typename PS>
 template <typename Random>
-void DataParallel<Net>::init(vector<int> index,
+void DataParallel<Net, PS>::init(vector<int> index,
     const typename Random::param_tuple& args) {
-  Runnable initializer(rank_, device_);
+  Runnable initializer(0, -1);
   Op<Random>* rnd = initializer.create<Random>("init", "main", args);
   vector<Blob*> tmp(index.size());
-  vector<vector<Blob*> > weights(nets_.size());
+  vector<vector<Blob*> > weights(nets_.size() + 1);
   for (int i = 0; i < index.size(); ++i) {
-    tmp[i] = initializer.create("tmp", weight_[index[i]]->shared_tensor());
+    tmp[i] = initializer.create("tmp",
+        param_server_->element(index[i])->weight()->size());
   }
-  for (int i = 0; i < nets_weight_data_.size(); ++i) {
+  for (int i = 0; i < nets_.size(); ++i) {
     weights[i] = vector<Blob*>(index.size());
     for (int j = 0; j < index.size(); ++j) {
       weights[i][j] = initializer.create("weight",
-          nets_weight_data_[i][index[j]]->shared_tensor());
+          nets_[i]->weight_data()[index[j]]->shared_tensor());
     }
+  }
+  weights[nets_.size()] = vector<Blob*>(index.size());
+  for (int j = 0; j < index.size(); ++j) {
+    weights[nets_.size()][j] = initializer.create("weight_ps",
+        param_server_->element(index[j])->weight());
   }
   vector<vector<Blob*> >{ tmp }
   >> *initializer.createAny<Vectorize<Distribute> >("init_distribute",
@@ -142,86 +118,34 @@ void DataParallel<Net>::init(vector<int> index,
   initializer.run();
 }
 
-template <typename Net>
-DataParallel<Net>::DataParallel(const vector<pair<int, int> >& locations,
-    const pair<int, int>& param_server) : Runnable(param_server.first,
-        param_server.second) {
+template <typename Net, typename PS>
+DataParallel<Net, PS>::DataParallel(const vector<pair<int, int> >& locations)
+    : Runnable() {
   // create replica
+  vector<vector<Blob*> > losses;
   nets_ = vector<Net*>(locations.size());
+  weights_ = vector<vector<Blob*> >(locations.size());
   for (int i = 0; i < locations.size(); ++i) {
-    nets_[i] = createGraph<Net>("replica", locations[i].first,
+    nets_[i] = createGraph<Net>("replica" + to_string(i), locations[i].first,
         locations[i].second);
     // get the data and labels
     const vector<Blob*>& dt = nets_[i]->data();
     const vector<Blob*>& lb = nets_[i]->label();
     data_.insert(data_.end(), dt.begin(), dt.end());
     labels_.insert(labels_.end(), lb.begin(), lb.end());
+    losses.push_back(nets_[i]->loss());
+    weights_[i] = nets_[i]->weight_data();
   }
-
-  // weights and weight_diffs
-  nets_weight_data_ = vector<vector<Blob*> >(nets_.size());
-  nets_weight_diff_ = vector<vector<Blob*> >(nets_.size());
-  new_weights_ = vector<vector<Blob*> >(nets_.size());
-  for (int i = 0; i < nets_.size(); ++i) {
-    nets_weight_data_[i] = nets_[i]->weight_data();
-    nets_weight_diff_[i] = nets_[i]->weight_diff();
-
-    new_weights_[i] = nets_[i]->weight_data();
-    for (int j = 0; j < new_weights_[i].size(); ++j) {
-      new_weights_[i][j] = create("new_weight_local",
-          nets_weight_data_[i][j]->rank(), nets_weight_data_[i][j]->device(),
-          nets_weight_data_[i][j]->tensor()->size());
-    }
-  }
-  int param_num = nets_weight_data_[0].size();
-
-  // aggregate weight_diff
-  Vectorize<Aggregate>* agg = createAny<Vectorize<Aggregate> >("aggregate",
-      vector<Aggregate::param_tuple>(param_num,
-          Aggregate::param_tuple(Aggregate::AVERAGE, rank_, device_)));
-  nets_weight_diff_ >> *agg;
-
-  // create weight, history, new_weight, new_history
-  weight_ = vector<Blob*>(param_num);
-  history_ = vector<Blob*>(param_num);
-  new_weight_ = vector<Blob*>(param_num);
-  new_history_ = vector<Blob*>(param_num);
-  for (int i = 0; i < param_num; ++i) {
-    Size weight_size = nets_weight_data_[0][i]->tensor()->size();
-    weight_[i] = create("weight", weight_size);
-    history_[i] = create("history", weight_size);
-    new_weight_[i] = create("new_weight", weight_[i]->shared_tensor());
-    new_history_[i] = create("new_history", history_[i]->shared_tensor());
-  }
-
-  // update
-  vector<Update::param_tuple> update_params();
-  Vectorize<Update>* updator = createAny<Vectorize<Update> >(
-      "updator", vector<int>(param_num, rank_), vector<int>(param_num, device_),
-      vector<Update::param_tuple>(param_num,
-          Update::param_tuple(0.9, 0.01, 0.0005)));
-  vector<vector<Blob*> >{ weight_, agg->top()[0], history_ }
-  >> *updator >> vector<vector<Blob*> >{ new_weight_, new_history_ };
-
-  // distribute weight
-  vector<vector<Blob*> >{ new_weight_ }
-  >> *createAny<Vectorize<Distribute> >("distribute",
-      vector<Distribute::param_tuple>(param_num, Distribute::param_tuple()))
-         >> new_weights_;
-
-  // initilize history
-  Runnable fill_history(rank_, device_);
-  vector<Blob*> h(history_.size());
-  for (int i = 0; i < history_.size(); ++i) {
-    h[i] = fill_history.create("history", history_[i]->shared_tensor());
-  }
-  *fill_history.create<Constant>("fill_history", "main",
-      Constant::param_tuple(0.)) >> h;
-  fill_history.run();
+  // agg loss to rank 0 device -1.
+  Vectorize<Aggregate>* agg = createAny<Vectorize<Aggregate> >("agg_loss",
+      vector<Aggregate::param_tuple>(losses[0].size(),
+          Aggregate::param_tuple(Aggregate::AVERAGE, 0, -1)));
+  losses >> *agg;
+  loss_ = agg->top()[0];
 }
 
-template <typename Net>
-void DataParallel<Net>::feed(const vector<Blob*>& data,
+template <typename Net, typename PS>
+void DataParallel<Net, PS>::feed(const vector<Blob*>& data,
     const vector<Blob*>& labels) {
   CHECK_EQ(data.size(), data_.size());
   CHECK_EQ(labels.size(), labels_.size());
@@ -237,17 +161,18 @@ void DataParallel<Net>::feed(const vector<Blob*>& data,
   }
 }
 
-template <typename Net>
-void DataParallel<Net>::run() {
-  // run and sync
-  run_async();
-  sync();
+template <typename Net, typename PS>
+void DataParallel<Net, PS>::sync() {
+  Runnable::sync();
   // update the weights
   for (int i = 0; i < nets_.size(); ++i) {
     if (nets_[i]->rank() == current_rank()) {
-      for (int j = 0; j < nets_.size(); ++j) {
-        new_weights_[i][j]->tensor()->
-            swap_memory(nets_weight_data_[i][j]->tensor());
+      for (int j = 0; j < weights_[0].size(); ++j) {
+        CHECK_EQ(new_weights_[i][j]->tensor()->size(),
+            weights_[i][j]->tensor()->size());
+        CHECK_EQ(new_weights_[i][j]->rank(), weights_[i][j]->rank());
+        CHECK_EQ(new_weights_[i][j]->device(), weights_[i][j]->device());
+        new_weights_[i][j]->tensor()->swap_memory(weights_[i][j]->tensor());
       }
     }
   }
