@@ -35,14 +35,15 @@ class Sum : public Operation {
  */
 class WeightedSum : public Operation {
  protected:
-  vector<DTYPE> weights;
+  vector<DTYPE> weights_;
  public:
   typedef tuple<vector<DTYPE> > param_tuple;
   explicit WeightedSum(const vector<Tensor*>& inputs,
       const vector<Tensor*>& outputs, const param_tuple& args);
   virtual void compute_cpu(const vector<bool>& add);
   virtual void compute_gpu(const vector<bool>& add);
-  inline void set_weights(const vector<DTYPE>& w) { weights = w; }
+  inline void set_weights(const vector<DTYPE>& w) { weights_ = w; }
+  inline vector<DTYPE> weights() { return weights_; }
 };
 
 /**

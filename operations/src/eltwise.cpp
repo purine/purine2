@@ -70,21 +70,21 @@ void Sum::compute_gpu(const vector<bool>& add) {
 WeightedSum::WeightedSum(const vector<Tensor*>& inputs,
     const vector<Tensor*>& outputs, const param_tuple& args)
     : Operation(inputs, outputs) {
-  std::tie(weights) = args;
+  std::tie(weights_) = args;
   CHECK_GE(inputs_.size(), 2);
   for (Tensor* input : inputs_) {
     CHECK_EQ(input->size(), outputs_[0]->size());
   }
-  CHECK_EQ(inputs_.size(), weights.size());
+  CHECK_EQ(inputs_.size(), weights_.size());
 }
 
 void WeightedSum::compute_cpu(const vector<bool>& add) {
   CHECK_EQ(add[0], false);
   int count = inputs_[0]->size().count();
-  caffe::caffe_cpu_scale(count, weights[0], inputs_[0]->cpu_data(),
+  caffe::caffe_cpu_scale(count, weights_[0], inputs_[0]->cpu_data(),
       outputs_[0]->mutable_cpu_data());
-  for (int i = 1; i < weights.size(); ++i) {
-    caffe::caffe_axpy(count, weights[i], inputs_[i]->cpu_data(),
+  for (int i = 1; i < weights_.size(); ++i) {
+    caffe::caffe_axpy(count, weights_[i], inputs_[i]->cpu_data(),
         outputs_[0]->mutable_cpu_data());
   }
 }
@@ -92,10 +92,10 @@ void WeightedSum::compute_cpu(const vector<bool>& add) {
 void WeightedSum::compute_gpu(const vector<bool>& add) {
   CHECK_EQ(add[0], false);
   int count = inputs_[0]->size().count();
-  caffe::caffe_gpu_scale(count, weights[0], inputs_[0]->gpu_data(),
+  caffe::caffe_gpu_scale(count, weights_[0], inputs_[0]->gpu_data(),
       outputs_[0]->mutable_gpu_data());
-  for (int i = 1; i < weights.size(); ++i) {
-    caffe::caffe_gpu_axpy(count, weights[i], inputs_[i]->gpu_data(),
+  for (int i = 1; i < weights_.size(); ++i) {
+    caffe::caffe_gpu_axpy(count, weights_[i], inputs_[i]->gpu_data(),
         outputs_[0]->mutable_gpu_data());
   }
 }
