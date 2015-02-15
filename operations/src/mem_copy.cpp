@@ -11,7 +11,7 @@ MemCopy::MemCopy(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
 }
 
 void MemCopy::compute_cpu(const vector<bool>& add) {
-  if (inputs_[0]->cpu_data() == outputs_[0]->cpu_data()) {
+  if (inputs_[0]->cpu_data() == outputs_[0]->mutable_cpu_data()) {
     return;
   } else {
     caffe::caffe_cpu_copy<DTYPE>(inputs_[0]->size().count(),
