@@ -75,23 +75,47 @@ void Op_::compute() {
   }
 }
 
-Op_& operator >> (const vector<Blob*>& inputs, Op_& op) {
-  CHECK(!op.input_setup_);
+void Op_::set_inputs(const vector<Blob*>& inputs) {
+  CHECK(!this->input_setup_);
   for (Blob* input : inputs) {
-    input->outputs_.push_back(&op);
-    op.inputs_.push_back(input);
+    input->outputs_.push_back(this);
+    this->inputs_.push_back(input);
   }
-  op.input_setup_ = true;
+  this->input_setup_ = true;
+}
+
+void Op_::set_outputs(const vector<Blob*>& outputs) {
+  CHECK(!this->output_setup_);
+  for (Blob* output : outputs) {
+    output->inputs_.push_back(this);
+    this->outputs_.push_back(output);
+  }
+  this->output_setup_ = true;
+}
+
+void Op_::check_inputs(const vector<Blob*>& inputs) {
+  for (Blob* input : inputs) {
+    CHECK_EQ(input->rank(), rank_);
+    CHECK_EQ(input->device(), device_);
+  }
+}
+
+void Op_::check_outputs(const vector<Blob*>& outputs) {
+  for (Blob* output : outputs) {
+    CHECK_EQ(output->rank(), rank_);
+    CHECK_EQ(output->device(), device_);
+  }
+}
+
+Op_& operator >> (const vector<Blob*>& inputs, Op_& op) {
+  op.check_inputs(inputs);
+  op.set_inputs(inputs);
   return op;
 }
 
 const vector<Blob*>& operator >> (Op_& op, const vector<Blob*>& outputs) {
-  CHECK(!op.output_setup_);
-  for (Blob* output : outputs) {
-    output->inputs_.push_back(&op);
-    op.outputs_.push_back(output);
-  }
-  op.output_setup_ = true;
+  op.check_outputs(outputs);
+  op.set_outputs(outputs);
   return outputs;
 }
 
@@ -199,41 +223,28 @@ void Op<MemCopy>::setup() {
           {static_cast<Blob*>(outputs_[0])->tensor()}, tuple<>()));
 }
 
-Op<MemCopy>& operator >> (const vector<Blob*>& inputs, Op<MemCopy>& op) {
-  CHECK(!op.input_setup_);
-  for (Blob* input : inputs) {
-    input->add_output(&op);
-    op.add_input(input);
-  }
-  op.input_setup_ = true;
-  if (op.input_setup_ && op.output_setup_) {
-    op.rank_ = op.inputs_[0]->rank();
-    if (op.inputs_[0]->device() >= 0 || op.outputs_[0]->device() < 0) {
-      op.device_ = op.inputs_[0]->device();
+void Op<MemCopy>::set_inputs(const vector<Blob*>& inputs) {
+  Op_::set_inputs(inputs);
+  if (input_setup_ && output_setup_) {
+    rank_ = inputs_[0]->rank();
+    if (inputs_[0]->device() >= 0 || outputs_[0]->device() < 0) {
+      device_ = inputs_[0]->device();
     } else {
-      op.device_ = op.outputs_[0]->device();
+      device_ = outputs_[0]->device();
     }
   }
-  return op;
 }
 
-const vector<Blob*>& operator >> (Op<MemCopy>& op,
-    const vector<Blob*>& outputs) {
-  CHECK(!op.output_setup_);
-  for (Blob* output : outputs) {
-    output->add_input(&op);
-    op.add_output(output);
-  }
-  op.output_setup_ = true;
-  if (op.output_setup_ && op.input_setup_) {
-    op.rank_ = op.inputs_[0]->rank();
-    if (op.inputs_[0]->device() >= 0 || op.outputs_[0]->device() < 0) {
-      op.device_ = op.inputs_[0]->device();
+void Op<MemCopy>::set_outputs(const vector<Blob*>& outputs) {
+  Op_::set_outputs(outputs);
+  if (output_setup_ && input_setup_) {
+    rank_ = inputs_[0]->rank();
+    if (inputs_[0]->device() >= 0 || outputs_[0]->device() < 0) {
+      device_ = inputs_[0]->device();
     } else {
-      op.device_ = op.outputs_[0]->device();
+      device_ = outputs_[0]->device();
     }
   }
-  return outputs;
 }
 
 }

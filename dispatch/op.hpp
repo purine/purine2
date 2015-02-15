@@ -26,10 +26,11 @@ namespace purine {
 
 class Blob;
 
+Op_& operator >> (const vector<Blob*>& inputs, Op_& op);
+const vector<Blob*>& operator >> (Op_& op, const vector<Blob*>& outputs);
+
 class Op_ : public Node {
-  friend Op_& operator >> (const vector<Blob*>& inputs, Op_& op);
-  friend const vector<Blob*>& operator >> (Op_& op,
-      const vector<Blob*>& outputs);
+  friend class Blob;
  private:
   Loop* loop_ = NULL;
  protected:
@@ -43,6 +44,10 @@ class Op_ : public Node {
   virtual void compute() override;
   inline string thread() const { return thread_; }
   Loop& loop();
+  virtual void set_inputs(const vector<Blob*>& inputs);
+  virtual void set_outputs(const vector<Blob*>& outputs);
+  virtual void check_inputs(const vector<Blob*>& inputs);
+  virtual void check_outputs(const vector<Blob*>& outputs);
 };
 
 template <typename O>
@@ -86,15 +91,15 @@ class Op<Isend> : public Op_ {
 
 template <>
 class Op<MemCopy> : public Op_ {
-  friend Op<MemCopy>& operator >> (const vector<Blob*>& inputs,
-      Op<MemCopy>& op);
-  friend const vector<Blob*>& operator >> (Op<MemCopy>& op,
-      const vector<Blob*>& outputs);
  protected:
   virtual void setup() override;
  public:
   explicit Op(int rank, int device, const string& thread,
       const typename MemCopy::param_tuple& args);
+  virtual void set_inputs(const vector<Blob*>& inputs) override;
+  virtual void set_outputs(const vector<Blob*>& outputs) override;
+  virtual void check_inputs(const vector<Blob*>& inputs) override {}
+  virtual void check_outputs(const vector<Blob*>& outputs) override {}
 };
 
 }

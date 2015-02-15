@@ -15,9 +15,7 @@ using std::shared_ptr;
 class Op_;
 
 class Blob : public Node {
-  friend Op_& operator >> (const vector<Blob*>& inputs, Op_& op);
-  friend const vector<Blob*>& operator >> (Op_& op,
-      const vector<Blob*>& outputs);
+  friend class Op_;
  protected:
   shared_ptr<Tensor> tensor_;
   cudaEvent_t cuda_event_ = NULL;
