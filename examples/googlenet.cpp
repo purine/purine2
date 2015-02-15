@@ -39,14 +39,14 @@ GoogLeNet::GoogLeNet(int rank, int device) : Graph(rank, device) {
       ConvLayer::param_tuple(3, 3, 2, 2, 7, 7, 64, "relu"));
   PoolLayer* pool1 = createGraph<PoolLayer>("max_pool1",
       PoolLayer::param_tuple("max", 3, 3, 2, 2, 0, 0));
-  LRNLayer* norm1 = createGraph<LRNLayer>("norm1",
-      LRNLayer::param_tuple(0.0001, 0.75, 5));
+  // LRNLayer* norm1 = createGraph<LRNLayer>("norm1",
+  //     LRNLayer::param_tuple(0.0001, 0.75, 5));
   ConvLayer* conv2_reduce = createGraph<ConvLayer>("conv2_reduce",
       ConvLayer::param_tuple(0, 0, 1, 1, 1, 1, 64, "relu"));
   ConvLayer* conv2 = createGraph<ConvLayer>("conv2",
       ConvLayer::param_tuple(1, 1, 1, 1, 3, 3, 192, "relu"));
-  LRNLayer* norm2 = createGraph<LRNLayer>("norm2",
-      LRNLayer::param_tuple(0.0001, 0.75, 5));
+  // LRNLayer* norm2 = createGraph<LRNLayer>("norm2",
+  //     LRNLayer::param_tuple(0.0001, 0.75, 5));
   PoolLayer* pool2 = createGraph<PoolLayer>("max_pool2",
       PoolLayer::param_tuple("max", 3, 3, 2, 2, 0, 0));
   InceptionLayer* inception3a = createGraph<InceptionLayer>("inception3a",
@@ -78,8 +78,8 @@ GoogLeNet::GoogLeNet(int rank, int device) : Graph(rank, device) {
   SoftmaxLossLayer* softmaxloss = createGraph<SoftmaxLossLayer>("softmaxloss",
       SoftmaxLossLayer::param_tuple(1.));
   // connecting layers
-  B{ data_,  data_diff_ } >> *conv1 >> *pool1 >> *norm1 >> *conv2_reduce
-  >> *conv2 >> *norm2 >> *pool2 >> *inception3a >> *inception3b >> *pool3
+  B{ data_,  data_diff_ } >> *conv1 >> *pool1 >> *conv2_reduce
+  >> *conv2 >> *pool2 >> *inception3a >> *inception3b >> *pool3
   >> *inception4a >> *inception4b >> *inception4c >> *inception4d
   >> *inception4e >> *inception5a >> *inception5b >> *global_ave
   >> *dropout >> *inner;
