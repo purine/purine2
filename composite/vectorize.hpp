@@ -38,6 +38,8 @@ class Vectorize : public Graph {
   vector<vector<Blob*> > bottom();
   void set_top(const vector<vector<Blob*> >& top);
   vector<vector<Blob*> > top();
+  T* element(int index) { return graphs_[index]; }
+  inline int size() { return graphs_.size(); }
 };
 
 template <typename T>
