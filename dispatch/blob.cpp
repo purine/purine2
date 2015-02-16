@@ -29,7 +29,7 @@ void Blob::compute() {
     // and inputs are executed in GPU.
     int device = static_cast<Op_*>(inputs_[0])->device();
     if (device >= 0) {
-      Loop& in_loop = static_cast<Op_*>(inputs_[0])->loop();
+      LoopInterface& in_loop = static_cast<Op_*>(inputs_[0])->loop();
       if (any_of(outputs_.begin(), outputs_.end(),
               [&](Node* output)->bool {
                 Op_* op = static_cast<Op_*>(output);

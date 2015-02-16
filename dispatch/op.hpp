@@ -32,7 +32,7 @@ const vector<Blob*>& operator >> (Op_& op, const vector<Blob*>& outputs);
 class Op_ : public Node {
   friend class Blob;
  private:
-  Loop* loop_ = NULL;
+  LoopInterface* loop_ = NULL;
  protected:
   string thread_; // name of thread
   shared_ptr<Operation> o_;
@@ -43,7 +43,7 @@ class Op_ : public Node {
   virtual ~Op_() override;
   virtual void compute() override;
   inline string thread() const { return thread_; }
-  Loop& loop();
+  LoopInterface& loop();
   virtual void set_inputs(const vector<Blob*>& inputs);
   virtual void set_outputs(const vector<Blob*>& outputs);
   virtual void check_inputs(const vector<Blob*>& inputs);

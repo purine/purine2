@@ -50,14 +50,14 @@ class Runnable : public Graph {
   void prepare_once();
   SinkCounter sink_counter_;
   mutex mutex_;
-  map<tuple<int, string>, shared_ptr<Loop> > loops_;
+  map<tuple<int, string>, shared_ptr<LoopInterface> > loops_;
  public:
   explicit Runnable(int rank = 0, int device = 0);
   virtual ~Runnable();
 
   inline SinkCounter& sink_counter() { return sink_counter_; }
 
-  Loop& task_loop(int device, const string& thread);
+  LoopInterface& task_loop(int device, const string& thread);
   virtual void run();
   virtual void run_async();
   virtual void sync();

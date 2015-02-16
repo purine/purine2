@@ -17,7 +17,7 @@ Op_::~Op_() {
 
 // find the loop from looper.
 // cache in the loop_ variable, next time would be faster.
-Loop& Op_::loop() {
+LoopInterface& Op_::loop() {
   CHECK_EQ(rank_, current_rank());
   if (loop_ == NULL) {
     loop_ = &(dynamic_cast<Runnable*>(cached_root_)->
@@ -43,6 +43,9 @@ void Op_::compute() {
             }
             CUDA_CHECK(cudaEventSynchronize(b->cuda_event()));
           }
+#ifndef NDEBUG
+          LOG(INFO) << "start " << cached_name_;
+#endif
           o_->compute_cpu(add);
         } else {
           for (Node* node : inputs_) {
@@ -63,16 +66,16 @@ void Op_::compute() {
         for (Node* output : outputs_) {
           output->inc_in();
         }
+        // ++sink_counter if is sink
+        if (outputs_.size() == 0) {
+          loop().post([this]()->void{
+                if (device_ >= 0) {
+                  CUDA_CHECK(cudaStreamSynchronize(stream()));
+                }
+                ++(dynamic_cast<Runnable*>(cached_root_)->sink_counter());
+              });
+        }
       });
-  // ++sink_counter if is sink
-  if (outputs_.size() == 0) {
-    loop().post([this](){
-          if (device_ >= 0) {
-            CUDA_CHECK(cudaStreamSynchronize(stream()));
-          }
-          ++(dynamic_cast<Runnable*>(cached_root_)->sink_counter());
-        });
-  }
 }
 
 void Op_::set_inputs(const vector<Blob*>& inputs) {

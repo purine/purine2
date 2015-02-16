@@ -134,13 +134,21 @@ vector<Node*> Runnable::sinks() {
 /**
  * @brief task loop
  */
-Loop& Runnable::task_loop(int device, const string& thread) {
+LoopInterface& Runnable::task_loop(int device, const string& thread) {
   mutex_.lock();
-  tuple<int, string> key = make_tuple(device, thread);
-  if (loops_.count(key) == 0) {
-    loops_[key] = shared_ptr<Loop>(new Loop(device));
+  tuple<int, string> key;
+  if (device < 0) {
+    key = make_tuple(device, "");
+    if (loops_.count(key) == 0) {
+      loops_[key] = shared_ptr<LoopInterface>(new ThreadPool());
+    }
+  } else {
+    key = make_tuple(device, thread);
+    if (loops_.count(key) == 0) {
+      loops_[key] = shared_ptr<LoopInterface>(new Loop(device));
+    }
   }
-  Loop& ret = *loops_[key];
+  LoopInterface& ret = *loops_[key];
   mutex_.unlock();
   return ret;
 }
