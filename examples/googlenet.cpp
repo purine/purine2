@@ -166,8 +166,8 @@ int main(int argc, char** argv) {
     fetch->sync();
     parallel_googlenet->sync();
     // verbose
-    vector<DTYPE> loss = parallel_googlenet->loss();
-    MPI_LOG( << "iteration: " << iter << ", loss: " << loss[0]);
+    MPI_LOG( << "iteration: " << iter << ", loss: "
+        << parallel_googlenet->loss()[0]);
     if (iter % 10 == 0) {
       parallel_googlenet->print_weight_info();
     }
