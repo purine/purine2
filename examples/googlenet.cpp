@@ -76,7 +76,7 @@ GoogLeNet::GoogLeNet(int rank, int device) : Graph(rank, device) {
   DropoutLayer* dropout = createGraph<DropoutLayer>("dropout",
       DropoutLayer::param_tuple(0.4, true));
   InnerProdLayer* inner = createGraph<InnerProdLayer>("inner",
-      InnerProdLayer::param_tuple(1000));
+      InnerProdLayer::param_tuple(1000, ""));
   SoftmaxLossLayer* softmaxloss = createGraph<SoftmaxLossLayer>("softmaxloss",
       SoftmaxLossLayer::param_tuple(1.));
   // connecting layers
