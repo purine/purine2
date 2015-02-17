@@ -109,25 +109,11 @@ vector<vector<string> > Runnable::print() {
   return ret;
 }
 
-/**
- * @brief return nodes that are sources of the graph
- * (which have no preceding nodes);
- */
-vector<Node*> Runnable::sources() {
-  vector<Node*> nodes_ = nodes();
-  nodes_.erase(std::remove_if(nodes_.begin(), nodes_.end(),
-      [](Node* n)->bool { return n->is_source() == false; }), nodes_.end());
-  return nodes_;
-}
-
-/**
- * @brief return nodes that are sinks of the graph
- * (which have no postceding nodes);
- */
-vector<Node*> Runnable::sinks() {
-  vector<Node*> nodes_ = nodes();
-  nodes_.erase(std::remove_if(nodes_.begin(), nodes_.end(),
-          [](Node* n)->bool { return n->is_sink() == false; }), nodes_.end());
+vector<Node*> Runnable::nodes() {
+  vector<Node*> nodes_ = Graph::nodes();
+  nodes_.erase(remove_if(nodes_.begin(), nodes_.end(), [](Node* n)->bool {
+            return n->rank() != current_rank();
+          }), nodes_.end());
   return nodes_;
 }
 

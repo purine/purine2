@@ -3,6 +3,7 @@
 #define PURINE_DATA_PARALLEL
 
 #include <iomanip>
+#include <set>
 #include "composite/composite.hpp"
 
 using namespace std;
@@ -13,7 +14,7 @@ template <typename Net, typename PS>
 class DataParallel : public Runnable {
  protected:
   vector<Net*> nets_;
-  Vectorize<PS>* param_server_;
+  Vectorize<PS>* param_server_ = NULL;
   vector<Blob*> data_;
   vector<Blob*> labels_;
   vector<Blob*> loss_;
@@ -128,6 +129,13 @@ DataParallel<Net, PS>::DataParallel(const vector<pair<int, int> >& locations)
   for (int i = 0; i < locations.size(); ++i) {
     nets_[i] = createGraph<Net>("replica" + to_string(i), locations[i].first,
         locations[i].second);
+    const vector<Blob*>& data_diff = nets_[i]->data_diff();
+    vector<Node*> to_prune(data_diff.size());
+    transform(data_diff.begin(), data_diff.end(), to_prune.begin(),
+        [](Blob* b)->Node* {
+          return dynamic_cast<Node*>(b);
+        });
+    nets_[i]->prune(to_prune);
     // get the data and labels
     const vector<Blob*>& dt = nets_[i]->data();
     const vector<Blob*>& lb = nets_[i]->label();

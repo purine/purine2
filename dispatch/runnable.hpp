@@ -57,12 +57,11 @@ class Runnable : public Graph {
 
   inline SinkCounter& sink_counter() { return sink_counter_; }
 
+  virtual vector<Node*> nodes() override;
   LoopInterface& task_loop(int device, const string& thread);
   virtual void run();
   virtual void run_async();
   virtual void sync();
-  vector<Node*> sources();
-  vector<Node*> sinks();
   vector<vector<string> > print();
 };
 

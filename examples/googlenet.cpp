@@ -16,6 +16,7 @@ class GoogLeNet : public Graph {
  protected:
   Blob* data_;
   Blob* label_;
+  Blob* data_diff_;
   vector<Blob*> weights_;
   vector<Blob*> weight_data_;
   vector<Blob*> weight_diff_;
@@ -27,12 +28,13 @@ class GoogLeNet : public Graph {
   inline const vector<Blob*>& weight_diff() { return weight_diff_; }
   inline vector<Blob*> data() { return { data_ }; }
   inline vector<Blob*> label() { return { label_ }; }
+  inline vector<Blob*> data_diff() { return { data_diff_ }; }
   inline vector<Blob*> loss() { return loss_; }
 };
 
 GoogLeNet::GoogLeNet(int rank, int device) : Graph(rank, device) {
   data_ = create("data", { batch_size, 3, 224, 224 });
-  Blob* data_diff_ = create("data_diff", { batch_size, 3, 224, 224 });
+  data_diff_ = create("data_diff", { batch_size, 3, 224, 224 });
   label_ = create("label", { batch_size, 1, 1, 1 });
   // creating layers
   ConvLayer* conv1 = createGraph<ConvLayer>("conv1",
@@ -85,7 +87,7 @@ GoogLeNet::GoogLeNet(int rank, int device) : Graph(rank, device) {
   >> *dropout >> *inner;
   // loss layer
   softmaxloss->set_label(label_);
-  B{ inner->top()[0], inner->top()[1] } >> *softmaxloss;
+  *inner >> *softmaxloss;
   // loss
   loss_ = { softmaxloss->loss()[0] };
   // weight
@@ -177,4 +179,5 @@ int main(int argc, char** argv) {
   parallel_googlenet.reset();
   // Finalize MPI
   MPI_CHECK(MPI_Finalize());
+  return 0;
 }

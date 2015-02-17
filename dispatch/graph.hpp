@@ -47,7 +47,7 @@ class Graph {
   int rank_;
   int device_;
   vector<shared_ptr<Graph> > subgraphs_;
-  map<Graph*, string> graph_name_;
+  map<const Graph*, string> graph_name_;
   Graph* parent_ = NULL;
   virtual void setup() {}
  public:
@@ -56,12 +56,18 @@ class Graph {
 
   inline int rank() const { return rank_; }
   inline int device() const { return device_; }
+  string name() const;
+  void prune(const vector<Node*>& sinks);
 
-  vector<Node*> nodes();
+  virtual vector<Node*> nodes();
+  vector<Node*> sources();
+  vector<Node*> sinks();
   vector<vector<string> > print();
 
   DTYPE memory_cost_cpu();
   DTYPE memory_cost_gpu();
+
+  void delete_subgraph(Graph* g);
 
   // create op
   template <typename O>
