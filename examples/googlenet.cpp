@@ -1,6 +1,7 @@
 // Copyright Lin Min 2015
 
 #include <mpi.h>
+#include <glog/logging.h>
 #include "common/common.hpp"
 #include "dispatch/runnable.hpp"
 #include "composite/composite.hpp"
@@ -110,6 +111,7 @@ GoogLeNet::GoogLeNet(int rank, int device) : Graph(rank, device) {
 using namespace purine;
 
 int main(int argc, char** argv) {
+  google::InitGoogleLogging(argv[0]);
   // initilize MPI
   int ret;
   MPI_CHECK(MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &ret));
