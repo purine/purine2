@@ -47,7 +47,7 @@ ImageLabel::ImageLabel(const vector<Tensor*>& inputs,
       << "mdb_open failed";
   CHECK_EQ(mdb_cursor_open(mdb_txn_, mdb_dbi_, &mdb_cursor_), MDB_SUCCESS)
       << "mdb_cursor_open failed";
-  LOG(INFO) << "Opening lmdb " << source;
+  // LOG(INFO) << "Opening lmdb " << source;
   CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, MDB_FIRST),
       MDB_SUCCESS) << "mdb_cursor_get failed";
   // go to the offset
