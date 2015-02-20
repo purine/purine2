@@ -3,6 +3,7 @@
 #define PURINE_DATA_PARALLEL
 
 #include <iomanip>
+#include <fstream>
 #include <set>
 #include "composite/composite.hpp"
 
@@ -23,8 +24,21 @@ class DataParallel : public Runnable {
  public:
   DataParallel(const vector<pair<int, int> >& locations);
   virtual ~DataParallel() override {};
+
+  // init weight using random number.
   template <typename Random>
   void init(vector<int> index, const typename Random::param_tuple& args);
+
+  /**
+   * @brief load weights from snapshot file
+   */
+  void load(const string& filename);
+
+  /**
+   * @brief save weights to snapshot file
+   */
+  void save(const string& filename);
+
   vector<DTYPE> loss();
   void print_weight_info();
   void feed(const vector<Blob*>& data, const vector<Blob*>& labels);
@@ -117,6 +131,85 @@ void DataParallel<Net, PS>::init(vector<int> index,
   >> weights;
   *rnd >> tmp;
   initializer.run();
+}
+
+template <typename Net, typename PS>
+void DataParallel<Net, PS>::load(const string& filename) {
+  Runnable loader(0, -1);
+  int num_param = param_server_->size();
+  vector<Blob*> tmp(num_param);
+  vector<vector<Blob*> > weights(nets_.size() + 1);
+  for (int i = 0; i < param_server_->size(); ++i) {
+    tmp[i] = loader.create("tmp",
+        param_server_->element(i)->weight()->size());
+  }
+  for (int i = 0; i < nets_.size(); ++i) {
+    weights[i] = vector<Blob*>(param_server_->size());
+    for (int j = 0; j < param_server_->size(); ++j) {
+      weights[i][j] = loader.create("weight",
+          nets_[i]->weight_data()[j]->shared_tensor());
+    }
+  }
+  weights[nets_.size()] = vector<Blob*>(param_server_->size());
+  for (int j = 0; j < param_server_->size(); ++j) {
+    weights[nets_.size()][j] = loader.create("weight_ps",
+        param_server_->element(j)->weight());
+  }
+  vector<vector<Blob*> >{ tmp }
+  >> *loader.createAny<Vectorize<Distribute> >("init_distribute",
+      vector<Distribute::param_tuple>(param_server_->size(),
+          Distribute::param_tuple()))
+  >> weights;
+  // fill with the binary data
+  if (current_rank() == 0) {
+    LOG(INFO) << "Loading snapshot " << filename;
+    // read file into binary string raw
+    ifstream in(filename, ios::binary);
+    stringstream ss;
+    ss << in.rdbuf();
+    const string& raw = ss.str();
+
+    int total_len = 0;
+    for (Blob* b : tmp) {
+      total_len += b->tensor()->size().count() * sizeof(DTYPE);
+    }
+    CHECK_EQ(raw.length(), total_len) <<
+        "Snapshot size incompatible with network weight";
+    int offset = 0;
+    for (Blob* b : tmp) {
+      int len = b->tensor()->size().count() * sizeof(DTYPE);
+      memcpy(b->tensor()->mutable_cpu_data(), raw.c_str() + offset, len);
+      offset += len;
+    }
+  }
+  // run
+  loader.run();
+}
+
+template <typename Net, typename PS>
+void DataParallel<Net, PS>::save(const string& filename) {
+  Runnable saver;
+  int param_num = param_server_->size();
+  vector<Blob*> param(param_num);
+  for (int i = 0; i < param_num; ++i) {
+    param[i] = saver.create("param", param_server_->element(i)->weight());
+  }
+  auto copier = saver.createAny<Vectorize<Copy> >("copy_here",
+      vector<Copy::param_tuple>(param_num, Copy::param_tuple(0, -1)));
+  vector<vector<Blob*> >{ param } >> *copier;
+  vector<Blob*> copied = copier->top()[0];
+  saver.run();
+
+  if (current_rank() == 0) {
+    ofstream out(filename);
+    for (int i = 0; i < param_num; ++i) {
+      const char* data = reinterpret_cast<const char*>(
+          copied[i]->tensor()->cpu_data());
+      int len = copied[i]->tensor()->size().count() * sizeof(DTYPE);
+      out.write(data, len);
+    }
+    LOG(INFO) << "Saving snapshot " << filename;
+  }
 }
 
 template <typename Net, typename PS>

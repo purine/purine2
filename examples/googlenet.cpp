@@ -175,6 +175,10 @@ int main(int argc, char** argv) {
     if (iter % 10 == 0) {
       parallel_googlenet->print_weight_info();
     }
+    if (iter % 5000 == 0) {
+      parallel_googlenet->save("./googlenet_no_aux_dump_iter_"
+          + to_string(iter) + ".snapshot");
+    }
   }
   // delete
   fetch.reset();
