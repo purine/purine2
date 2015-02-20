@@ -61,43 +61,44 @@ void after_work(uv_work_t* work, int status) {
   ThreadPool* l = (ThreadPool*)((ThreadPool::work_data*)work->data)->tp_;
   delete (ThreadPool::work_data*)work->data;
   delete work;
-  std::unique_lock<std::mutex> lck(l->mtx_);
   --(l->count_);
-  l->cv_.notify_all();
+  uv_async_send(&l->async_);
 }
 
-void stop_cb(uv_async_t* async) {
-  ThreadPool* l = (ThreadPool*)(async->data);
-  uv_stop(l->loop_);
-  uv_close((uv_handle_t*)&l->async_, NULL);
+void thread_pool_async_cb(uv_async_t* async) {
+  ThreadPool* l = static_cast<ThreadPool*>((Loop*)(async->data));
+  function<void()> fn;
+  while (true) {
+    l->mutex_.lock();
+    if (l->queue_.size() == 0) {
+      if (l->stop_) {
+        if (l->count_ == 0) {
+          uv_stop(l->loop_);
+          uv_close((uv_handle_t*)&l->async_, NULL);
+        }
+      }
+      l->mutex_.unlock();
+      break;
+    }
+    fn = l->queue_.front();
+    l->queue_.pop_front();
+    l->mutex_.unlock();
+    // post fn to threadpool
+    uv_work_t* w = new uv_work_t();
+    w->data = new ThreadPool::work_data(l, fn);
+    ++(l->count_);  // add to the counter, only happens in the loop thread
+    uv_queue_work(l->loop_, w, work_cb, after_work);
+  }
 }
 
 ThreadPool::ThreadPool() {
   loop_ = (uv_loop_t*)malloc(sizeof *loop_);
   UV_CHECK(uv_loop_init(loop_));
-  UV_CHECK(uv_async_init(loop_, &async_, stop_cb));
+  UV_CHECK(uv_async_init(loop_, &async_, thread_pool_async_cb));
   async_.data = (void*)(this);
   thread_.reset(new thread([=] () {
             UV_CHECK(uv_run(loop_, UV_RUN_DEFAULT));
           }));
-}
-
-ThreadPool::~ThreadPool() {
-  std::unique_lock<std::mutex> lck(mtx_);
-  cv_.wait(lck, [this]()->bool { return count_ == 0; });
-  uv_async_send(&async_);
-  thread_->join();
-  UV_CHECK(uv_loop_close(loop_));
-  free(loop_);
-}
-
-void ThreadPool::post(const function<void()>& fn) {
-  uv_work_t* w = new uv_work_t();
-  w->data = new work_data(this, fn);
-  std::unique_lock<std::mutex> lck(mtx_);
-  ++count_;
-  cv_.notify_all();
-  uv_queue_work(loop_, w, work_cb, after_work);
 }
 
 }
