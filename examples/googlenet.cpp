@@ -143,6 +143,8 @@ int main(int argc, char** argv) {
   parallel_googlenet->setup_param_server(vector<int>(116, 0),
       vector<int>(116, -1), param);
   // do the initialization
+#define RANDOM
+#ifdef RANDOM
   vector<int> indice(58);
   iota(indice.begin(), indice.end(), 0);
   vector<int> weight_indice(58);
@@ -160,6 +162,9 @@ int main(int argc, char** argv) {
       Gaussian::param_tuple(0., 0.05));
   parallel_googlenet->init<Gaussian>({0, 4, 114, 110, 106, 98, 94},
       Gaussian::param_tuple(0., 0.01));
+#else
+  parallel_googlenet->load("./googlenet_no_aux_dump_iter_35000.snapshot");
+#endif
   // iteration
   for (int iter = 1; iter <= 10000; ++iter) {
     // feed prefetched data to googlenet
