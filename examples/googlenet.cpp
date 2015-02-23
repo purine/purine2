@@ -9,7 +9,7 @@
 
 namespace purine {
 
-int batch_size = 128;
+int batch_size = 64;
 string source = "/temp/imagenet-train-256xN-lmdb";
 string mean_file = "/temp/imagenet-train-mean";
 
@@ -166,7 +166,7 @@ int main(int argc, char** argv) {
   parallel_googlenet->load("./googlenet_no_aux_dump_iter_35000.snapshot");
 #endif
   // iteration
-  for (int iter = 1; iter <= 10000; ++iter) {
+  for (int iter = 1; iter <= 35000; ++iter) {
     // feed prefetched data to googlenet
     parallel_googlenet->feed(fetch->images(), fetch->labels());
     // start googlenet and next fetch
@@ -177,7 +177,7 @@ int main(int argc, char** argv) {
     // verbose
     MPI_LOG( << "iteration: " << iter << ", loss: "
         << parallel_googlenet->loss()[0]);
-    if (iter % 10 == 0) {
+    if (iter % 100 == 0) {
       parallel_googlenet->print_weight_info();
     }
     if (iter % 5000 == 0) {
