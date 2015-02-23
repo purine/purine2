@@ -184,6 +184,7 @@ void DataParallel<Net, PS>::load(const string& filename) {
   }
   // run
   loader.run();
+  MPI_LOG( << "Snapshot loaded" );
 }
 
 template <typename Net, typename PS>
