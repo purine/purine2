@@ -132,13 +132,13 @@ int main(int argc, char** argv) {
   shared_ptr<DataParallel<GoogLeNet, AllReduce> > parallel_googlenet
       = make_shared<DataParallel<GoogLeNet, AllReduce> >(parallels);
   // set learning rate etc
-  DTYPE global_learning_rate = 0.04;
+  DTYPE global_learning_rate = 0.1;
   DTYPE global_decay = 0.0001;
   vector<AllReduce::param_tuple> param(116);
   for (int i = 0; i < 116; ++i) {
-    param[i] = AllReduce::param_tuple(0.9,
-        global_learning_rate * (i % 2 ? 2. : 1.),
-        global_decay * (i % 2 ? 1. : 0.));
+    DTYPE learning_rate = global_learning_rate * (i % 2 ? 2. : 1.);
+    param[i] = AllReduce::param_tuple(0.9, learning_rate,
+        learning_rate * global_decay * (i % 2 ? 0. : 1.));
   }
   parallel_googlenet->setup_param_server(vector<int>(116, 0),
       vector<int>(116, -1), param);
