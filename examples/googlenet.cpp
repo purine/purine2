@@ -117,7 +117,7 @@ int main(int argc, char** argv) {
   MPI_CHECK(MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &ret));
   // parallels
   vector<pair<int, int> > parallels;
-  for (int rank : {0}) {
+  for (int rank : {0, 1, 2, 3, 4}) {
     for (int device : {0, 1, 2}) {
       parallels.push_back({rank, device});
     }
