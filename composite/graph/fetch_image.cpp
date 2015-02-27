@@ -41,7 +41,7 @@ FetchImage::FetchImage(const string& source, const string& mean, bool mirror,
   int entries = mdb_stat_.ms_entries;
   mdb_env_close(mdb_env_);
   MPI_LOG( << "Lmdb contains " << entries << " entries." );
-  int each_location = entries / location.size();
+  // int each_location = entries / location.size();
   int offset = 0;
   for (auto kv : images) {
 
@@ -49,7 +49,7 @@ FetchImage::FetchImage(const string& source, const string& mean, bool mirror,
     MPI_LOG( << " machine " << kv.first );
     MPI_LOG( << " ============================= " );
     int size = batch_size * kv.second.size();
-    int interval = size;
+    int interval = batch_size * location.size();
     MPI_LOG( << " offset            " << offset );
     MPI_LOG( << " batch size        " << size );
     MPI_LOG( << " interval          " << interval );
@@ -82,7 +82,7 @@ FetchImage::FetchImage(const string& source, const string& mean, bool mirror,
         vector<Copy::param_tuple>(kv.second.size()))
            >> vector<vector<Blob*> >{ labels[kv.first] };
 
-    offset += each_location * kv.second.size();
+    offset += size;
   }
 }
 
