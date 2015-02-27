@@ -20,3 +20,4 @@
 #include "composite/layers/softmax_layer.hpp"
 #include "composite/layers/softmaxloss_layer.hpp"
 #include "composite/layers/split_layer.hpp"
+#include "composite/layers/nin_layer.hpp"
