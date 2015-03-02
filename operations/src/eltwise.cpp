@@ -148,7 +148,7 @@ void Scale::compute_cpu(const vector<bool>& add) {
 void Scale::compute_gpu(const vector<bool>& add) {
   CHECK_EQ(add[0], false);
   caffe::caffe_gpu_scale<DTYPE>(inputs_[0]->size().count(), scale,
-      inputs_[0]->cpu_data(), outputs_[0]->mutable_cpu_data());
+      inputs_[0]->gpu_data(), outputs_[0]->mutable_gpu_data());
 }
 
 }
