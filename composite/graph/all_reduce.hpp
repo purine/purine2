@@ -5,6 +5,7 @@
 #include "dispatch/graph_template.hpp"
 #include "composite/connectable.hpp"
 #include "composite/graph/update.hpp"
+#include "composite/composite.hpp"
 
 namespace purine {
 

@@ -11,12 +11,13 @@ namespace purine {
 class DropoutLayer : public Layer {
  protected:
   DTYPE ratio;
+  bool test;
   bool inplace;
  public:
-  typedef tuple<DTYPE, bool> param_tuple;
+  typedef tuple<DTYPE, bool, bool> param_tuple;
   DropoutLayer(int rank, int device, const param_tuple& args)
       : Layer(rank, device) {
-    std::tie(ratio, inplace) = args;
+    std::tie(ratio, test, inplace) = args;
   }
   virtual ~DropoutLayer() {}
 
@@ -45,17 +46,25 @@ class DropoutLayer : public Layer {
         };
       }
     }
+    if (!test) {
+      // create ops
+      Op<Bernoulli>* mask_generator = create<Bernoulli>("mask_gen", "main",
+          make_tuple(1. - ratio)); // the thread can be other than main
+      Blob* mask = create("mask", bottom_size);
+      *mask_generator >> B{ mask };
 
-    // create ops
-    Op<Bernoulli>* mask_generator = create<Bernoulli>("mask_gen", "main",
-        make_tuple(1. - ratio)); // the thread can be other than main
-    Blob* mask = create("mask", bottom_size);
-    *mask_generator >> B{ mask };
-
-    Op<Mul>* mul = create<Mul>("mul", "main", tuple<>());
-    Op<Mul>* mul_down = create<Mul>("mul_down", "main", tuple<>());
-    B{ bottom_[0], mask } >> *mul >> B{ top_[0] };
-    B{ top_[1], mask } >> *mul_down >> B{ bottom_[1] };
+      Op<Mul>* mul = create<Mul>("mul", "main", tuple<>());
+      Op<Mul>* mul_down = create<Mul>("mul_down", "main", tuple<>());
+      B{ bottom_[0], mask } >> *mul >> B{ top_[0] };
+      B{ top_[1], mask } >> *mul_down >> B{ bottom_[1] };
+    } else {
+      Op<Scale>* scaler = create<Scale>("scaler", "main",
+          make_tuple(1. - ratio));
+      Op<Scale>* scaler_back = create<Scale>("scaler", "main",
+          make_tuple(1. - ratio));
+      B{ bottom_[0] } >> *scaler >> B{ top_[0] };
+      B{ top_[1] } >> *scaler_back >> B{ bottom_[1] };
+    }
   }
 };
 
