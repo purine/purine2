@@ -70,7 +70,7 @@ GoogLeNet::GoogLeNet(int rank, int device) : Graph(rank, device) {
   GlobalAverageLayer* global_ave = createGraph<GlobalAverageLayer>("global_avg",
       GlobalAverageLayer::param_tuple());
   DropoutLayer* dropout = createGraph<DropoutLayer>("dropout",
-      DropoutLayer::param_tuple(0.4, true));
+      DropoutLayer::param_tuple(0.4, false, true));
   InnerProdLayer* inner = createGraph<InnerProdLayer>("inner",
       InnerProdLayer::param_tuple(1000, ""));
   SoftmaxLossLayer* softmaxloss = createGraph<SoftmaxLossLayer>("softmaxloss",

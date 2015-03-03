@@ -42,14 +42,14 @@ NIN_Cifar10::NIN_Cifar10(int rank, int device) : Graph(rank, device) {
   PoolLayer* pool1 = createGraph<PoolLayer>("pool1",
       PoolLayer::param_tuple("max", 3, 3, 2, 2, 0, 0));
   DropoutLayer* dropout1 = createGraph<DropoutLayer>("dropout1",
-      DropoutLayer::param_tuple(0.5, true, false));
+      DropoutLayer::param_tuple(0.5, false, false));
 
   NINLayer* nin2 = createGraph<NINLayer>("nin2",
       NINLayer::param_tuple(2, 2, 1, 1, 5, 5, "relu", {192, 192, 192}));
   PoolLayer* pool2 = createGraph<PoolLayer>("pool2",
       PoolLayer::param_tuple("max", 3, 3, 2, 2, 0, 0));
   DropoutLayer* dropout2 = createGraph<DropoutLayer>("dropout2",
-      DropoutLayer::param_tuple(0.5, true, false));
+      DropoutLayer::param_tuple(0.5, false, false));
 
   NINLayer* nin3 = createGraph<NINLayer>("nin3",
       NINLayer::param_tuple(1, 1, 1, 1, 3, 3, "relu", {192, 192, 10}));
