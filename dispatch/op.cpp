@@ -43,9 +43,9 @@ void Op_::compute() {
             }
             CUDA_CHECK(cudaEventSynchronize(b->cuda_event()));
           }
-#ifndef NDEBUG
-          LOG(INFO) << "start " << cached_name_;
-#endif
+// #ifndef NDEBUG
+//           LOG(INFO) << "start " << cached_name_;
+// #endif
           o_->compute_cpu(add);
         } else {
           for (Node* node : inputs_) {
@@ -55,13 +55,13 @@ void Op_::compute() {
             }
             CUDA_CHECK(cudaStreamWaitEvent(stream(), b->cuda_event(), 0));
           }
-#ifndef NDEBUG
-          LOG(INFO) << "start " << cached_name_;
-#endif
+// #ifndef NDEBUG
+//           LOG(INFO) << "start " << cached_name_;
+// #endif
           o_->compute_gpu(add);
-#ifndef NDEBUG
-          CUDA_CHECK(cudaStreamSynchronize(stream()));
-#endif
+// #ifndef NDEBUG
+//           CUDA_CHECK(cudaStreamSynchronize(stream()));
+// #endif
         }
         for (Node* output : outputs_) {
           output->inc_in();

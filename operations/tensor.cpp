@@ -29,19 +29,19 @@ void Tensor::alloc_mem(DTYPE** data, const Size& size, int rank, int device) {
   CHECK_GT(size.count(), 0);
   CHECK_EQ(current_rank(), rank) << "Can't allocate memory on another machine";
   if (device < 0) {
-#ifndef NDEBUG
-    cudaHostAlloc(data, sizeof(DTYPE) * (1 + size.count()),
-        cudaHostAllocPortable);
-#else
+// #ifndef NDEBUG
+//     cudaHostAlloc(data, sizeof(DTYPE) * (1 + size.count()),
+//         cudaHostAllocPortable);
+// #else
     cudaHostAlloc(data, sizeof(DTYPE) * size.count(), cudaHostAllocPortable);
-#endif
+// #endif
   } else {
     SWITCH_DEVICE(device);
-#ifndef NDEBUG
-    CUDA_CHECK(cudaMalloc(data, sizeof(DTYPE) * (1 + size.count())));
-#else
+// #ifndef NDEBUG
+//     CUDA_CHECK(cudaMalloc(data, sizeof(DTYPE) * (1 + size.count())));
+// #else
     CUDA_CHECK(cudaMalloc(data, sizeof(DTYPE) * size.count()));
-#endif
+// #endif
     SWITCH_BACK(device);
   }
 }
@@ -61,11 +61,11 @@ void Tensor::free_mem(DTYPE* data, int rank, int device) {
 }
 
 void Tensor::swap_memory(Tensor* other) {
-#ifndef NDEBUG
-  DTYPE* tmp = other->past_the_end_;
-  other->past_the_end_ = past_the_end_;
-  past_the_end_ = tmp;
-#endif
+// #ifndef NDEBUG
+//   DTYPE* tmp = other->past_the_end_;
+//   other->past_the_end_ = past_the_end_;
+//   past_the_end_ = tmp;
+// #endif
   CHECK_EQ(other->size_, size_);
   CHECK_EQ(other->stride_, stride_);
   CHECK_EQ(other->offset_, offset_);
@@ -73,9 +73,9 @@ void Tensor::swap_memory(Tensor* other) {
 }
 
 void Tensor::slice_from(Tensor* other, const Offset& off, const Size& size) {
-#ifndef NDEBUG
-  past_the_end_ = other->past_the_end_;
-#endif
+// #ifndef NDEBUG
+//   past_the_end_ = other->past_the_end_;
+// #endif
   rank_ = other->rank_;
   device_ = other->device_;
   stride_ = other->stride_;
@@ -85,9 +85,9 @@ void Tensor::slice_from(Tensor* other, const Offset& off, const Size& size) {
 }
 
 void Tensor::share_from(Tensor* other) {
-#ifndef NDEBUG
-  past_the_end_ = other->past_the_end_;
-#endif
+// #ifndef NDEBUG
+//   past_the_end_ = other->past_the_end_;
+// #endif
   rank_ = other->rank_;
   device_ = other->device_;
   stride_ = other->stride_;
@@ -102,18 +102,18 @@ void Tensor::delete_data() {
 
 const DTYPE* Tensor::data() const {
   CHECK(data_);
-#ifndef NDEBUG
-  if (device_ < 0) {
-    CHECK_EQ(*past_the_end_, 555.);
-  } else {
-    DTYPE flag = 0;
-    SWITCH_DEVICE(device_);
-    CUDA_CHECK(cudaMemcpy(&flag, past_the_end_, sizeof(DTYPE) * 1,
-            cudaMemcpyDeviceToHost));
-    SWITCH_BACK(device_);
-    CHECK_EQ(flag, 555.);
-  }
-#endif
+// #ifndef NDEBUG
+//   if (device_ < 0) {
+//     CHECK_EQ(*past_the_end_, 555.);
+//   } else {
+//     DTYPE flag = 0;
+//     SWITCH_DEVICE(device_);
+//     CUDA_CHECK(cudaMemcpy(&flag, past_the_end_, sizeof(DTYPE) * 1,
+//             cudaMemcpyDeviceToHost));
+//     SWITCH_BACK(device_);
+//     CHECK_EQ(flag, 555.);
+//   }
+// #endif
   return data_.get() + Tensor::offset(offset_, stride_);
 }
 
@@ -125,31 +125,31 @@ DTYPE* Tensor::mutable_data() {
     Tensor::alloc_mem(&ptr, size_, rank_, device_);
     data_.reset(ptr, bind(Tensor::free_mem, std::placeholders::_1, rank_,
             device_));
-#ifndef NDEBUG
-    past_the_end_ = data_.get() + size_.count();
-    if (device_ < 0) {
-      *past_the_end_ = 555.;
-    } else {
-      DTYPE flag = 555.;
-      SWITCH_DEVICE(device_);
-      CUDA_CHECK(cudaMemcpy(past_the_end_, &flag, sizeof(DTYPE) * 1,
-              cudaMemcpyHostToDevice));
-      SWITCH_BACK(device_);
-    }
-#endif
+// #ifndef NDEBUG
+//     past_the_end_ = data_.get() + size_.count();
+//     if (device_ < 0) {
+//       *past_the_end_ = 555.;
+//     } else {
+//       DTYPE flag = 555.;
+//       SWITCH_DEVICE(device_);
+//       CUDA_CHECK(cudaMemcpy(past_the_end_, &flag, sizeof(DTYPE) * 1,
+//               cudaMemcpyHostToDevice));
+//       SWITCH_BACK(device_);
+//     }
+// #endif
   }
-#ifndef NDEBUG
-  if (device_ < 0) {
-    CHECK_EQ(*past_the_end_, 555.);
-  } else {
-    DTYPE flag = 0;
-    SWITCH_DEVICE(device_);
-    CUDA_CHECK(cudaMemcpy(&flag, past_the_end_, sizeof(DTYPE) * 1,
-            cudaMemcpyDeviceToHost));
-    SWITCH_BACK(device_);
-    CHECK_EQ(flag, 555.);
-  }
-#endif
+// #ifndef NDEBUG
+//   if (device_ < 0) {
+//     CHECK_EQ(*past_the_end_, 555.);
+//   } else {
+//     DTYPE flag = 0;
+//     SWITCH_DEVICE(device_);
+//     CUDA_CHECK(cudaMemcpy(&flag, past_the_end_, sizeof(DTYPE) * 1,
+//             cudaMemcpyDeviceToHost));
+//     SWITCH_BACK(device_);
+//     CHECK_EQ(flag, 555.);
+//   }
+// #endif
   return data_.get() + Tensor::offset(offset_, stride_);
 }
 
