@@ -30,8 +30,8 @@ int main(int argc, char** argv) {
       true, true, true, batch_size, 224, parallels);
   fetch->run();
   // create data parallelism of GoogLeNet;
-  shared_ptr<DataParallel<GoogLeNet, AllReduce> > parallel_googlenet
-      = make_shared<DataParallel<GoogLeNet, AllReduce> >(parallels);
+  shared_ptr<DataParallel<GoogLeNet<false>, AllReduce> > parallel_googlenet
+      = make_shared<DataParallel<GoogLeNet<false>, AllReduce> >(parallels);
   // set learning rate etc
   DTYPE global_learning_rate = 0.05;
   DTYPE global_decay = 0.0005;

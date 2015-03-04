@@ -23,8 +23,8 @@ int main(int argc, char** argv) {
       false, false, true, batch_size, 32, vector<pair<int, int> >{{0, 0}});
   fetch->run();
   // create data parallelism of Nin_Cifar;
-  shared_ptr<ComputeLoss<NIN_Cifar10> > nin_cifar_test
-      = make_shared<ComputeLoss<NIN_Cifar10> >(0, 0);
+  shared_ptr<ComputeLoss<NIN_Cifar10<true> > > nin_cifar_test
+      = make_shared<ComputeLoss<NIN_Cifar10<true> > >(0, 0);
   // do the initialization
   nin_cifar_test->load("./nin_cifar_dump_iter_25000.snapshot");
   // iteration

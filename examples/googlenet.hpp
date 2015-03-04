@@ -8,6 +8,7 @@ extern int batch_size;
 extern string source;
 extern string mean_file;
 
+template <bool test>
 class GoogLeNet : public Graph {
  protected:
   Blob* data_;
@@ -28,7 +29,8 @@ class GoogLeNet : public Graph {
   inline vector<Blob*> loss() { return loss_; }
 };
 
-GoogLeNet::GoogLeNet(int rank, int device) : Graph(rank, device) {
+template <bool test>
+GoogLeNet<test>::GoogLeNet(int rank, int device) : Graph(rank, device) {
   data_ = create("data", { batch_size, 3, 224, 224 });
   data_diff_ = create("data_diff", { batch_size, 3, 224, 224 });
   label_ = create("label", { batch_size, 1, 1, 1 });
@@ -70,7 +72,7 @@ GoogLeNet::GoogLeNet(int rank, int device) : Graph(rank, device) {
   GlobalAverageLayer* global_ave = createGraph<GlobalAverageLayer>("global_avg",
       GlobalAverageLayer::param_tuple());
   DropoutLayer* dropout = createGraph<DropoutLayer>("dropout",
-      DropoutLayer::param_tuple(0.4, false, true));
+      DropoutLayer::param_tuple(0.4, test, true));
   InnerProdLayer* inner = createGraph<InnerProdLayer>("inner",
       InnerProdLayer::param_tuple(1000, ""));
   SoftmaxLossLayer* softmaxloss = createGraph<SoftmaxLossLayer>("softmaxloss",

@@ -11,6 +11,7 @@ extern int batch_size;
 extern string source;
 extern string mean_file;
 
+template <bool test>
 class NIN_Cifar10 : public Graph {
  protected:
   Blob* data_;
@@ -31,7 +32,9 @@ class NIN_Cifar10 : public Graph {
   inline vector<Blob*> loss() { return loss_; }
 };
 
-NIN_Cifar10::NIN_Cifar10(int rank, int device) : Graph(rank, device) {
+template <bool test>
+NIN_Cifar10<test>::NIN_Cifar10(int rank, int device)
+    : Graph(rank, device) {
   data_ = create("data", { batch_size, 3, 32, 32 });
   data_diff_ = create("data_diff", { batch_size, 3, 32, 32 });
   label_ = create("label", { batch_size, 1, 1, 1 });
@@ -42,14 +45,14 @@ NIN_Cifar10::NIN_Cifar10(int rank, int device) : Graph(rank, device) {
   PoolLayer* pool1 = createGraph<PoolLayer>("pool1",
       PoolLayer::param_tuple("max", 3, 3, 2, 2, 0, 0));
   DropoutLayer* dropout1 = createGraph<DropoutLayer>("dropout1",
-      DropoutLayer::param_tuple(0.5, false, false));
+      DropoutLayer::param_tuple(0.5, test, false));
 
   NINLayer* nin2 = createGraph<NINLayer>("nin2",
       NINLayer::param_tuple(2, 2, 1, 1, 5, 5, "relu", {192, 192, 192}));
   PoolLayer* pool2 = createGraph<PoolLayer>("pool2",
       PoolLayer::param_tuple("max", 3, 3, 2, 2, 0, 0));
   DropoutLayer* dropout2 = createGraph<DropoutLayer>("dropout2",
-      DropoutLayer::param_tuple(0.5, false, false));
+      DropoutLayer::param_tuple(0.5, test, false));
 
   NINLayer* nin3 = createGraph<NINLayer>("nin3",
       NINLayer::param_tuple(1, 1, 1, 1, 3, 3, "relu", {192, 192, 10}));

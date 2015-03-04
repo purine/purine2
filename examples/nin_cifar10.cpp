@@ -30,8 +30,8 @@ int main(int argc, char** argv) {
       false, false, true, batch_size, 32, parallels);
   fetch->run();
   // create data parallelism of Nin_Cifar;
-  shared_ptr<DataParallel<NIN_Cifar10, AllReduce> > parallel_nin_cifar
-      = make_shared<DataParallel<NIN_Cifar10, AllReduce> >(parallels);
+  shared_ptr<DataParallel<NIN_Cifar10<false>, AllReduce> > parallel_nin_cifar
+      = make_shared<DataParallel<NIN_Cifar10<false>, AllReduce> >(parallels);
   // set learning rate etc
   DTYPE global_learning_rate = 0.1;
   DTYPE global_decay = 0.0001;
