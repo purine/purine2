@@ -1,4 +1,6 @@
 // Copyright Lin Min 2015
+#ifndef PURINE_GOOGLENET
+#define PURINE_GOOGLENET
 
 #include "common/common.hpp"
 #include "dispatch/runnable.hpp"
@@ -65,6 +67,8 @@ GoogLeNet<test>::GoogLeNet(int rank, int device) : Graph(rank, device) {
       InceptionLayer::param_tuple(112, 288, 64, 144, 32, 64));
   InceptionLayer* inception4e = createGraph<InceptionLayer>("inception4e",
       InceptionLayer::param_tuple(256, 320, 128, 160, 32, 128));
+  PoolLayer* pool4 = createGraph<PoolLayer>("max_pool4",
+      PoolLayer::param_tuple("max", 3, 3, 2, 2, 0, 0));
   InceptionLayer* inception5a = createGraph<InceptionLayer>("inception5a",
       InceptionLayer::param_tuple(256, 320, 128, 160, 32, 128));
   InceptionLayer* inception5b = createGraph<InceptionLayer>("inception5b",
@@ -72,22 +76,25 @@ GoogLeNet<test>::GoogLeNet(int rank, int device) : Graph(rank, device) {
   GlobalAverageLayer* global_ave = createGraph<GlobalAverageLayer>("global_avg",
       GlobalAverageLayer::param_tuple());
   DropoutLayer* dropout = createGraph<DropoutLayer>("dropout",
-      DropoutLayer::param_tuple(0.4, test, true));
+      DropoutLayer::param_tuple(0.4, test, false));
   InnerProdLayer* inner = createGraph<InnerProdLayer>("inner",
       InnerProdLayer::param_tuple(1000, ""));
   SoftmaxLossLayer* softmaxloss = createGraph<SoftmaxLossLayer>("softmaxloss",
       SoftmaxLossLayer::param_tuple(1.));
+  Acc* acc = createGraph<Acc>("acc", rank_, -1, Acc::param_tuple(5));
   // connecting layers
   B{ data_,  data_diff_ } >> *conv1 >> *pool1 >> *conv2_reduce
   >> *conv2 >> *pool2 >> *inception3a >> *inception3b >> *pool3
   >> *inception4a >> *inception4b >> *inception4c >> *inception4d
-  >> *inception4e >> *inception5a >> *inception5b >> *global_ave
+  >> *inception4e >> *pool4 >> *inception5a >> *inception5b >> *global_ave
   >> *dropout >> *inner;
   // loss layer
   softmaxloss->set_label(label_);
   *inner >> *softmaxloss;
+  acc->set_label(label_);
+  vector<Blob*>{ inner->top()[0] } >> *acc;
   // loss
-  loss_ = { softmaxloss->loss()[0] };
+  loss_ = { softmaxloss->loss()[0], acc->loss()[0] };
   // weight
   vector<Layer*> layers = { conv1, conv2_reduce, conv2, inception3a,
                             inception3b, inception4a, inception4b, inception4c,
@@ -102,3 +109,5 @@ GoogLeNet<test>::GoogLeNet(int rank, int device) : Graph(rank, device) {
     weight_diff_.insert(weight_diff_.end(), w.begin(), w.end());
   }
 }
+
+#endif

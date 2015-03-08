@@ -1,11 +1,12 @@
 // Copyright Lin Min 2015
 
 #include <mpi.h>
+#include <chrono>
 #include <glog/logging.h>
 #include "examples/googlenet.hpp"
 #include "composite/graph/all_reduce.hpp"
 
-int batch_size = 64;
+int batch_size = 128;
 string source = "/temp/imagenet-train-256xN-lmdb";
 string mean_file = "/temp/imagenet-train-mean";
 
@@ -14,7 +15,7 @@ using namespace purine;
 void setup_param_server(DataParallel<GoogLeNet<false>, AllReduce>*
     parallel_googlenet, DTYPE global_learning_rate) {
   // set learning rate etc
-  DTYPE global_decay = 0.00005;
+  DTYPE global_decay = 0.0001;
   vector<AllReduce::param_tuple> param(116);
   for (int i = 0; i < 116; ++i) {
     DTYPE learning_rate = global_learning_rate * (i % 2 ? 2. : 1.);
@@ -43,7 +44,7 @@ void initialize(DataParallel<GoogLeNet<false>, AllReduce>* parallel_googlenet,
     parallel_googlenet->init<Constant>(bias_indice, Constant::param_tuple(0.2));
     parallel_googlenet->init<Gaussian>(weight_indice,
         Gaussian::param_tuple(0., 0.05));
-    parallel_googlenet->init<Gaussian>({// 0, 2,
+    parallel_googlenet->init<Gaussian>({0, 2,
             12, 14,
             24, 26,
             36, 38,
@@ -60,11 +61,8 @@ void initialize(DataParallel<GoogLeNet<false>, AllReduce>* parallel_googlenet,
   }
 }
 
-int main(int argc, char** argv) {
-  google::InitGoogleLogging(argv[0]);
-  // initilize MPI
-  int ret;
-  MPI_CHECK(MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &ret));
+void time(int bs) {
+  batch_size = bs;
   // parallels
   vector<pair<int, int> > parallels;
   for (int rank : {0, 1, 2, 3}) {
@@ -78,14 +76,17 @@ int main(int argc, char** argv) {
   shared_ptr<FetchImage> fetch = make_shared<FetchImage>(source, mean_file,
       true, true, true, batch_size, 224, parallels);
   fetch->run();
-
-  // create data parallelism of GoogLeNet;
+  // googlenet
   shared_ptr<DataParallel<GoogLeNet<false>, AllReduce> > parallel_googlenet
       = make_shared<DataParallel<GoogLeNet<false>, AllReduce> >(parallels);
   setup_param_server(parallel_googlenet.get(), 0.1);
   initialize(parallel_googlenet.get(), "");
+
+  auto start = std::chrono::system_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>
+          (std::chrono::system_clock::now() - start);
   // iteration
-  for (int iter = 1; iter <= 100000; ++iter) {
+  for (int iter = 1; iter <= 200; ++iter) {
     // feed prefetched data to googlenet
     parallel_googlenet->feed(fetch->images(), fetch->labels());
     // start googlenet and next fetch
@@ -93,44 +94,31 @@ int main(int argc, char** argv) {
     fetch->run_async();
     fetch->sync();
     parallel_googlenet->sync();
-
     // verbose
-    MPI_LOG( << "iteration: " << iter << ", loss: "
-        << parallel_googlenet->loss()[0]);
-    if (iter % 100 == 0) {
-      parallel_googlenet->print_weight_info();
+    MPI_LOG( << "Iteration: " << iter);
+    if (iter == 100) {
+      start = std::chrono::system_clock::now();
     }
-
-    if (iter % 10000 == 0) {
-      parallel_googlenet->save("./googlenet_no_aux_dump_iter_"
-          + to_string(iter) + ".snapshot");
-    }
-    if (iter == 40000) {
-      parallel_googlenet.reset(new DataParallel<GoogLeNet<false>,
-          AllReduce>(parallels));
-      setup_param_server(parallel_googlenet.get(), 0.01);
-      initialize(parallel_googlenet.get(), "./googlenet_no_aux_dump_iter_"
-          + to_string(iter) + ".snapshot");
-    }
-    if (iter == 70000) {
-      parallel_googlenet.reset(new DataParallel<GoogLeNet<false>,
-          AllReduce>(parallels));
-      setup_param_server(parallel_googlenet.get(), 0.001);
-      initialize(parallel_googlenet.get(), "./googlenet_no_aux_dump_iter_"
-          + to_string(iter) + ".snapshot");
-    }
-    if (iter == 90000) {
-      parallel_googlenet.reset(new DataParallel<GoogLeNet<false>,
-          AllReduce>(parallels));
-      setup_param_server(parallel_googlenet.get(), 0.0001);
-      initialize(parallel_googlenet.get(), "./googlenet_no_aux_dump_iter_"
-          + to_string(iter) + ".snapshot");
+    if (iter == 200) {
+      duration = std::chrono::duration_cast<std::chrono::milliseconds>
+          (std::chrono::system_clock::now() - start);
+      MPI_LOG( << "Batch Size: " << batch_size <<
+          " Time Elapsed: " << duration.count());
     }
   }
-
   // delete
   fetch.reset();
   parallel_googlenet.reset();
+}
+
+int main(int argc, char** argv) {
+  google::InitGoogleLogging(argv[0]);
+  // initilize MPI
+  int ret;
+  MPI_CHECK(MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &ret));
+  time(40);
+  time(48);
+  time(56);
   // Finalize MPI
   MPI_CHECK(MPI_Finalize());
   return 0;
