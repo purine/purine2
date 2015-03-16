@@ -37,12 +37,8 @@ find_package(MPI)
 include_directories(${MPI_INCLUDE_PATH})
 
 include_directories(${PROJECT_SOURCE_DIR})
-include_directories(${PROJECT_SOURCE_DIR}/../caffe/include)
-include_directories(${PROJECT_SOURCE_DIR}/../caffe/build/src)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-
-# set_source_files_properties(graph/graph.hpp PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} -Wno-non-template-friend")
 
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}
   -gencode arch=compute_20,code=sm_20
@@ -57,6 +53,8 @@ set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}
   -std=c++11
   )
 
+add_subdirectory(caffeine/proto)
+
 file(GLOB_RECURSE PURINE_CU_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cu)
 cuda_add_library(purine_cu STATIC ${PURINE_CU_SOURCES})
 
@@ -67,7 +65,7 @@ list(REMOVE_ITEM PURINE_CPP_SOURCES ${TEST_CPP_SOURCES})
 list(REMOVE_ITEM PURINE_CPP_SOURCES ${EXAMPLE_SOURCES})
 
 add_library(purine STATIC ${PURINE_CPP_SOURCES})
-target_link_libraries(purine purine_cu
+target_link_libraries(purine purine_cu proto
   ${CUDA_CUBLAS_LIBRARIES}
   ${CUDA_curand_LIBRARY}
   ${BLAS_LIBRARIES}

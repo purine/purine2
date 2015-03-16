@@ -34,7 +34,6 @@ foreach(source ${TEST_CPP_SOURCES})
 
     add_executable(${TEST_NAME} EXCLUDE_FROM_ALL ${TEST_OBJ_LIB} $<TARGET_OBJECTS:test_main.o>)
     target_link_libraries(${TEST_NAME} purine)
-    target_link_libraries(${TEST_NAME} caffe)
     target_link_libraries(${TEST_NAME}
       ${GLOG_LIBRARIES}
       ${PROTOBUF_LIBRARIES}
@@ -52,7 +51,6 @@ endforeach()
 # Build a compound test excluded from the ALL target
 add_executable(test_all EXCLUDE_FROM_ALL ${TEST_OBJ_LIBS} $<TARGET_OBJECTS:test_main.o>)
 target_link_libraries(test_all purine)
-target_link_libraries(test_all caffe)
 target_link_libraries(test_all
   ${CUDA_CUBLAS_LIBRARIES}
   ${CUDA_curand_LIBRARY}
