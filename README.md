@@ -1,5 +1,7 @@
 # PURINE2 #
 purine version 2.
+This framework is described in
+[Purine: A bi-graph based deep learning framework](http://arxiv.org/abs/1412.6249)
 
 ## Directory Structure ##
 
@@ -165,3 +167,6 @@ There are two examples under the examples folder.
 Data parallelism is used in both the above examples, because the fully
 connected layers are replaced by a global pooling layer, thus the
 parameter number is small and suitable for data parallelism.
+
+### License ###
+Purine is released under the BSD 2-Clause license.
