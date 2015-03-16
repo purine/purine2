@@ -38,7 +38,10 @@ class Vectorize : public Graph {
   vector<vector<Blob*> > bottom();
   void set_top(const vector<vector<Blob*> >& top);
   vector<vector<Blob*> > top();
-  T* element(int index) { return graphs_[index]; }
+  T* element(int index) {
+    CHECK_LT(index, graphs_.size());
+    return graphs_[index];
+  }
   inline int size() { return graphs_.size(); }
 };
 

@@ -43,7 +43,9 @@ class DataParallel : public Runnable {
   void print_weight_info();
   void feed(const vector<Blob*>& data, const vector<Blob*>& labels);
   virtual void sync() override;
-
+  PS* param_server(int index) {
+    return param_server_->element(index);
+  }
   template <typename... Args>
   void setup_param_server(const Args&... args) {
     vector<vector<Blob*> > weight_diff(nets_.size());

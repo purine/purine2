@@ -58,10 +58,11 @@ class Op : public Op_ {
  public:
   explicit Op(int rank, int device, const string& thread,
       const typename O::param_tuple& args);
-  inline O* operation() {
-    CHECK(o_);
-    return dynamic_cast<O*>(o_.get());
+  inline void set_param(const typename O::param_tuple& args) {
+    args_ = args;
+    setup();
   }
+  inline const typename O::param_tuple& param() { return args_; }
 };
 
 template <>

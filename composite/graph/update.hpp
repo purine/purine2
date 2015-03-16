@@ -25,20 +25,8 @@ class Update : public Connectable {
   }
   virtual ~Update() override {}
   // set parameters.
-  void set_momentum(DTYPE momentum) {
-    vector<DTYPE> weights = compute_update->operation()->weights();
-    weights[0] = momentum;
-    compute_update->operation()->set_weights(weights);
-  }
-  void set_learning_rate(DTYPE learning_rate) {
-    vector<DTYPE> weights = compute_update->operation()->weights();
-    weights[1] = learning_rate;
-    compute_update->operation()->set_weights(weights);
-  }
-  void set_weight_decay(DTYPE weight_decay) {
-    vector<DTYPE> weights = compute_update->operation()->weights();
-    weights[2] = weight_decay;
-    compute_update->operation()->set_weights(weights);
+  inline void set_param(const WeightedSum::param_tuple& param) {
+    compute_update->set_param(param);
   }
  protected:
   virtual void setup() override;

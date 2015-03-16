@@ -21,12 +21,16 @@ class AllReduce : public Connectable {
   Blob* weight_diff_;
   Blob* history_;
   Update::param_tuple args_;
+  Update* updator = NULL;
  public:
   typedef Update::param_tuple param_tuple;
   explicit AllReduce(int rank, int device, const param_tuple& args)
       : Connectable(rank, device), args_(args) {
   }
   virtual ~AllReduce() override {}
+  inline void set_param(const WeightedSum::param_tuple& param) {
+    updator->set_param(param);
+  }
   shared_ptr<Tensor> weight() { return weight_->shared_tensor(); }
   shared_ptr<Tensor> weight_diff() { return weight_diff_->shared_tensor(); }
   shared_ptr<Tensor> history() { return history_->shared_tensor(); }
@@ -52,7 +56,7 @@ class AllReduce : public Connectable {
     history_ = create("[history]", bottom_size);
     Blob* new_weight = create("[new_weight]", weight_->shared_tensor());
     Blob* new_history = create("[new_history]", history_->shared_tensor());
-    Update* updator = createGraph<Update>("updator", args_);
+    updator = createGraph<Update>("updator", args_);
     vector<Blob*>{ weight_, weight_diff_, history_ } >>
     *updator >> vector<Blob*>{ new_weight, new_history };
     // distribute
