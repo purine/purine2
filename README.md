@@ -16,13 +16,16 @@ purine version 2.
 - #### catch ####
 
   > contains the header file of CATCH testing system. It is the unit
-  test framework used in Purine.
+  test framework used in Purine. There are not much unit testing in
+  this code. Since the core math functions are based on cudnn and
+  caffe, it should be no problem. (Though during development I did
+  file a bug report to cudnn, now it is fixed in cudnn v2 rc3)
 
 - #### dispatch ####
 
   > contains definitions of graph, node, op, blob etc.
-  blob wraps tensor, op wraps operation. Different from Purine1, there
-  is no standalone dispatcher, the dispatching code is inside blob, op
+  blob wraps tensor, op wraps operation. Different from Purine version
+  1, there is no standalone dispatcher, the dispatching code is inside blob, op
   and graph. Construction of a graph can be done by connecting blobs
   and ops. The resulting Graph is self-dispatchable. By calling
   graph.run().
@@ -47,8 +50,6 @@ purine version 2.
 - #### tests ####
 
   > unit tests of the project.
-
-## Structure ##
 
 ### Tensor and Operation ###
 
@@ -78,7 +79,7 @@ vector<bool>&` as argument, which has the same size as `outputs`. This
 is to denote whether the computed results should be write to the
 output tensor or add to it.
 Purine has enough built in operations for daily deep learning usage,
-wrapping all the functions in CUDNN package by NVIDIA.
+wrapping most of the functions in CUDNN package by NVIDIA.
 
 #### Connection ####
 
@@ -103,9 +104,8 @@ operations. Thus a counter is also needed for each tensor.
 Counter is not part of either operation or tensor, but it is needed
 when executing the graph. That's why Op and Blob are introduced here
 as wrappers of operation and tensor respectively. So that the counter
-can be stored in Op/Blob. In purine, the computation is stored in the
-bipartite graph consisting of Ops and Blobs.
-
+can be stored in Op/Blob. In purine, the computation logic is stored
+in the bipartite graph consisting of Ops and Blobs.
 
 Connection types:
 
@@ -113,24 +113,55 @@ Connection types:
 
 2. Op >> { tensor }
 
-3. { tensor } >> Graph
+3. { tensor } >> Connectable
 
-4. Graph >> { tensor }
+4. Connectable >> { tensor }
 
-5. Graph >> Graph
+5. Connectable >> Connectable
 
-6. { tensor } >> Layer
+The >> operator works through calling the `set_input` and `set_output`
+function in `Connectable`.
 
-7. Layer >> { tensor }
+Example to construct a graph.
 
-8. Layer >> Layer
+First construct a runnable.
 
-9. { tensor } >> Copy  // same as 3
+```c++
+Runnable run;
+```
+create nodes in the runnable.
 
-10. Copy >> { tensor } // same as 4
+```c++
+Blob* bottom = run.create("bottom_name", Size{128, 10, 1, 1});
+Blob* weight = run.create("weight_name", Size(16, 10, 1, 1));
 
-11. Copy >> Graph  // gets the location info of Graph, set the args of
-    Copy and then setup Copy, so that copy's output will be on the
-    correct location.
+Op<Inner>* inner_prod = run.create<Inner>("inner_prod_name", "main", Inner::param_tuple());
+// param_tuple is typedefed in the class `Inner`. It is a typedef of tuple<...>.
+// It lists the arguments needed when constructing the operation.
+// In the case the `Inner` operation does not need any argument.
 
-12. Graph >> Copy // same as 5
+Blob* top = run.create("top_name", Size(128, 16, 1, 1));
+// connect them
+vector<Blob*>{ bottom, weight } >> *inner_prod >> vector<Blob*>{ top };
+
+// call run
+run.run();
+// the graph will be executed (from sources to sinks). But of course you want to set initial values to the Blobs in the real case.
+```
+
+### Examples ###
+There are two examples under the examples folder.
+
+1. Network in Network on the CIFAR10 dataset which achieves 10.4%
+   error rate.
+
+2. GoogLeNet. We run the googlenet on 12 GPUs using data parallelism.
+   it is able to converge in 20 hours (If your GPU are highend ones
+   which are more stable in temperature, it could be reduced to 17
+   hours). The error rate is 12.7% (Higher performance may require
+   some tuning as the batch size is quite big as compared to caffe's
+   setting.)
+
+Data parallelism is used in both the above examples, because the fully
+connected layers are replaced by a global pooling layer, thus the
+parameter number is small and suitable for data parallelism.
