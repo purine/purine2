@@ -140,15 +140,23 @@ Scale::Scale(const vector<Tensor*>& inputs, const vector<Tensor*>& outputs,
 }
 
 void Scale::compute_cpu(const vector<bool>& add) {
-  CHECK_EQ(add[0], false);
-  caffe::caffe_cpu_scale<DTYPE>(inputs_[0]->size().count(), scale,
-      inputs_[0]->cpu_data(), outputs_[0]->mutable_cpu_data());
+  if (add[0] == false) {
+    caffe::caffe_cpu_scale<DTYPE>(inputs_[0]->size().count(), scale,
+        inputs_[0]->cpu_data(), outputs_[0]->mutable_cpu_data());
+  } else {
+    caffe::caffe_axpy(inputs_[0]->size().count(), scale,
+        inputs_[0]->cpu_data(), outputs_[0]->mutable_cpu_data());
+  }
 }
 
 void Scale::compute_gpu(const vector<bool>& add) {
-  CHECK_EQ(add[0], false);
-  caffe::caffe_gpu_scale<DTYPE>(inputs_[0]->size().count(), scale,
-      inputs_[0]->gpu_data(), outputs_[0]->mutable_gpu_data());
+  if (add[0] == false) {
+    caffe::caffe_gpu_scale<DTYPE>(inputs_[0]->size().count(), scale,
+        inputs_[0]->gpu_data(), outputs_[0]->mutable_gpu_data());
+  } else {
+    caffe::caffe_gpu_axpy(inputs_[0]->size().count(), scale,
+        inputs_[0]->gpu_data(), outputs_[0]->mutable_gpu_data());
+  }
 }
 
 }
