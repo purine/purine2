@@ -1,6 +1,6 @@
 // Copyright Lin Min 2015
-#include "caffe/util/io.hpp"
-#include "caffe/proto/caffe.pb.h"
+#include "caffeine/io.hpp"
+#include "caffeine/proto/caffe.pb.h"
 #include "operations/include/image_label.hpp"
 
 using caffe::BlobProto;

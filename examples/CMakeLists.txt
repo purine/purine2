@@ -31,7 +31,6 @@ foreach(source ${EXAMPLE_CPP_SOURCES})
 
     add_executable(${EXAMPLE_NAME} EXCLUDE_FROM_ALL ${EXAMPLE_OBJ_LIB})
     target_link_libraries(${EXAMPLE_NAME} purine)
-    target_link_libraries(${EXAMPLE_NAME} caffe)
     target_link_libraries(${EXAMPLE_NAME}
       ${GLOG_LIBRARIES}
       ${PROTOBUF_LIBRARIES}
