@@ -78,12 +78,14 @@ void ImageLabel::compute_cpu(const vector<bool>& add) {
             MDB_GET_CURRENT), MDB_SUCCESS);
     datum.ParseFromArray(mdb_value_.mv_data, mdb_value_.mv_size);
     const string& data = datum.data();
+    const bool has_unit8 = data.size() > 0;
     int height = datum.height();
     int width = datum.width();
     int channels = datum.channels();
 
-    if (data.size()) {
-      int h_off, w_off;
+    int h_off = 0;
+    int w_off = 0;
+    if (height > crop_size) {
       if (random) {
         h_off = caffe::caffe_rng_rand() % (height - crop_size);
         w_off = caffe::caffe_rng_rand() % (width - crop_size);
@@ -91,45 +93,51 @@ void ImageLabel::compute_cpu(const vector<bool>& add) {
         h_off = (height - crop_size) / 2;
         w_off = (width - crop_size) / 2;
       }
+    }
 
-      if (mirror && caffe::caffe_rng_rand() % 2) {
-        // Copy mirrored version
-        for (int c = 0; c < channels; ++c) {
-          for (int h = 0; h < crop_size; ++h) {
-            for (int w = 0; w < crop_size; ++w) {
-              int top_index = ((item_id * channels + c) * crop_size + h)
-                  * crop_size + (crop_size - 1 - w);
-              int data_index = (c * height + h + h_off) * width + w + w_off;
-              int mean_index = (c * mean_height + h + mean_h_off) * mean_width
-                  + w + mean_w_off;
-              DTYPE datum_element =
+    DTYPE datum_element;
+    if (mirror && caffe::caffe_rng_rand() % 2) {
+      // Copy mirrored version
+      for (int c = 0; c < channels; ++c) {
+        for (int h = 0; h < crop_size; ++h) {
+          for (int w = 0; w < crop_size; ++w) {
+            int top_index = ((item_id * channels + c) * crop_size + h)
+                * crop_size + (crop_size - 1 - w);
+            int data_index = (c * height + h + h_off) * width + w + w_off;
+            int mean_index = (c * mean_height + h + mean_h_off) * mean_width
+                + w + mean_w_off;
+            if (has_unit8) {
+              datum_element =
                   static_cast<DTYPE>(static_cast<uint8_t>(data[data_index]));
-              top_data[top_index] = datum_element - mean[mean_index];
+            } else {
+              datum_element = datum.float_data(data_index);
             }
-          }
-        }
-      } else {
-        // Normal copy
-        for (int c = 0; c < channels; ++c) {
-          for (int h = 0; h < crop_size; ++h) {
-            for (int w = 0; w < crop_size; ++w) {
-              int top_index = ((item_id * channels + c) * crop_size + h)
-                  * crop_size + w;
-              int data_index = (c * height + h + h_off) * width + w + w_off;
-              int mean_index = (c * mean_height + h + mean_h_off) * mean_width
-                  + w + mean_w_off;
-              DTYPE datum_element =
-                  static_cast<DTYPE>(static_cast<uint8_t>(data[data_index]));
-              top_data[top_index] = datum_element - mean[mean_index];
-            }
+            top_data[top_index] = datum_element - mean[mean_index];
           }
         }
       }
     } else {
-      for (int j = 0; j < size; ++j) {
-        top_data[item_id * size + j] = datum.float_data(j) - mean[j];
+      // Normal copy
+      for (int c = 0; c < channels; ++c) {
+        for (int h = 0; h < crop_size; ++h) {
+          for (int w = 0; w < crop_size; ++w) {
+            int top_index = ((item_id * channels + c) * crop_size + h)
+                * crop_size + w;
+            int data_index = (c * height + h + h_off) * width + w + w_off;
+            int mean_index = (c * mean_height + h + mean_h_off) * mean_width
+                + w + mean_w_off;
+            if (has_unit8) {
+              datum_element =
+                  static_cast<DTYPE>(static_cast<uint8_t>(data[data_index]));
+            } else {
+              datum_element = datum.float_data(data_index);
+            }
+            top_data[top_index] = datum_element - mean[mean_index];
+          }
+        }
       }
     }
+
     top_label[item_id] = datum.label();
     if (mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, MDB_NEXT)
         != MDB_SUCCESS) {
